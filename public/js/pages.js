@@ -87,33 +87,6 @@ export function home() {
   return node;
 }
 
-export function watchlist() {
-  const features = t('watchlist.features');
-  return section(
-    'watchlist',
-    `
-    <header class="page-head">
-      <h1>${esc(t('watchlist.title'))}</h1>
-      <p class="lead">${esc(t('watchlist.lead'))}</p>
-      ${statusChip({ phase: 1, step: 2 })}
-    </header>
-    <div class="grid">
-      ${features
-        .map(
-          ([title, desc], i) => `
-        <article class="ticket ticket-static">
-          <span class="ticket-main">
-            <span class="ticket-title">${esc(title)}</span>
-            <span class="ticket-desc">${esc(desc)}</span>
-          </span>
-          <span class="ticket-stub" aria-hidden="true"><span>Nº ${stubNo(i + 1)}</span></span>
-        </article>`,
-        )
-        .join('')}
-    </div>`,
-  );
-}
-
 export function games() {
   return section(
     'games',
