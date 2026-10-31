@@ -3,10 +3,9 @@
   "framework": null,
   "buildCommand": "echo \"Static site: nothing to build\"",
   "outputDirectory": "public",
-  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/((?!api/|css/|js/|icons/|manifest\\.webmanifest).*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ],
