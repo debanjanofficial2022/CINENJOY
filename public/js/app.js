@@ -2,13 +2,31 @@
 import { t, getLang, setLang, onLangChange } from './i18n.js';
 import { createLogo } from './logo.js';
 import * as pages from './pages.js';
+import { listsPage, listPage, joinPage } from './watchlist.js';
+import { registerLoader } from './loading.js';
+import { initAccount } from './data.js';
 
 const routes = {
   '/': { view: pages.home, nav: 'home', title: null },
-  '/watchlist': { view: pages.watchlist, nav: 'watchlist', title: 'nav.watchlist' },
+  '/watchlist': { view: listsPage, nav: 'watchlist', title: 'nav.watchlist' },
   '/games': { view: pages.games, nav: 'games', title: 'nav.games' },
   '/lobby': { view: pages.lobby, nav: 'lobby', title: 'nav.lobby' },
 };
+
+// Addresses with a value in them: /watchlist/<list id>, /join/<invite code>
+const patterns = [
+  { re: /^\/watchlist\/([0-9a-f-]{36})$/i, view: listPage, nav: 'watchlist', title: 'nav.watchlist' },
+  { re: /^\/join\/([A-Za-z0-9]{4,40})$/, view: joinPage, nav: 'watchlist', title: 'nav.watchlist' },
+];
+
+function match(path) {
+  if (routes[path]) return { ...routes[path], arg: undefined };
+  for (const p of patterns) {
+    const m = path.match(p.re);
+    if (m) return { ...p, arg: m[1] };
+  }
+  return null;
+}
 
 const main = document.getElementById('main');
 const langSelect = document.getElementById('lang-select');
@@ -17,8 +35,8 @@ const firstPath = normalise(location.pathname);
 const brandLogo = createLogo({ size: 'sm', autoplay: firstPath !== '/' });
 document.getElementById('brand-logo').append(brandLogo.el);
 
-// Other parts of the site call this while they fetch data (step 1b onward).
-export const setLoading = (on) => brandLogo.setLoading(on);
+// Pages make the logo loop while their data loads
+registerLoader((on) => brandLogo.setLoading(on));
 
 function normalise(path) {
   const p = path.replace(/\/+$/, '');
@@ -35,9 +53,8 @@ function applyStaticText() {
 
 function render({ focus = false } = {}) {
   const path = normalise(location.pathname);
-  const route = routes[path];
-  const view = route ? route.view : pages.notFound;
-  main.replaceChildren(view());
+  const route = match(path);
+  main.replaceChildren(route ? route.view(route.arg) : pages.notFound());
   document.title = route && route.title ? `${t(route.title)} · CINENJOY` : 'CINENJOY';
   document.querySelectorAll('[data-nav]').forEach((a) => {
     const on = route && a.dataset.nav === route.nav;
@@ -64,6 +81,7 @@ document.addEventListener('click', (e) => {
 });
 
 window.addEventListener('popstate', () => render());
+document.addEventListener('cinenjoy:navigate', (e) => navigate(e.detail));
 
 langSelect.addEventListener('change', () => setLang(langSelect.value));
 onLangChange(() => {
@@ -74,3 +92,6 @@ onLangChange(() => {
 document.getElementById('year').textContent = String(new Date().getFullYear());
 applyStaticText();
 render();
+
+// A first visit quietly creates an account, so nothing is ever lost
+initAccount().catch((err) => console.warn('Account not ready yet', err));
