@@ -51,6 +51,8 @@ function scoreResult(c, r) {
   const votes = r.vote_count || 0;
   s += (Math.min(votes, 5000) / 5000) * 0.05;
   if (c.strength < 2 && votes < 30) s -= 0.3;
+  // An obscure title with no year to confirm it is only a maybe
+  if (!c.year && votes < 15) s -= 0.2;
   if (c.strength < 2 && !nc.includes(' ') && votes < 200) s -= 0.3;
   return s;
 }
@@ -204,7 +206,7 @@ async function readPage(u, lang) {
   } else {
     x.fromHtml(page.body, c);
   }
-  return { title: info.title || host, kind, lang: (info.lang || 'en').split('-')[0], cands: c.list(kind === 'imdb' ? 150 : 70) };
+  return { title: info.title || host, kind, lang: (info.lang || 'en').split('-')[0], cands: c.list(kind === 'imdb' ? 200 : 150) };
 }
 
 async function readBody(req) {

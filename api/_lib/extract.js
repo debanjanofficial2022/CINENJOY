@@ -139,11 +139,18 @@ class Collector {
     const y = year || yearOf(t);
     t = stripYear(t);
     if (!plausible(t)) return;
-    const key = `${norm(t)}|${y || ''}`;
-    const prev = this.map.get(key);
+    // One entry per title; a second entry only for a different year (Parasite 1982 vs 2019)
+    const n = norm(t);
+    let key = n;
+    let prev = this.map.get(key);
+    if (prev && y && prev.year && prev.year !== y) {
+      key = `${n}|${y}`;
+      prev = this.map.get(key);
+    }
     if (prev) {
       prev.count += 1;
       if (strength > prev.strength) prev.strength = strength;
+      if (y && !prev.year) prev.year = y;
     } else {
       this.map.set(key, { title: t, year: y || null, strength, pos: this.pos++, hint, count: 1 });
     }
@@ -153,7 +160,7 @@ class Collector {
       if (parts.length > 1 && parts[0].length >= 2) this.add(parts[0], { strength, year: y, hint, alt: false });
     }
   }
-  list(limit = 70) {
+  list(limit = 150) {
     const all = [...this.map.values()];
     const strong = all.filter((c) => c.strength >= 2).sort((a, b) => b.strength - a.strength || a.pos - b.pos);
     // loose phrases: only the ones that come up more than once, or the first few
@@ -275,27 +282,67 @@ function fromLdJson(html, c) {
   }
 }
 
+// Section headings after which a page is references, links and comments
+const END_SECTIONS = /^(references|notes|footnotes|citations|sources|bibliography|see also|external links|further reading|works cited|comments?|related (posts|articles|stories)|you (may|might) also like|more from|read next|referencias|notas|véase también|enlaces externos|bibliografía|参考文献|参考资料|注释|外部链接|相关条目|延伸阅读)\b/i;
+
 function mainHtml(html) {
   let h = html
     .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<(script|style|noscript|svg|template|iframe|form|nav|footer|aside|select|button)\b[\s\S]*?<\/\1>/gi, ' ');
+    .replace(/<(script|style|noscript|svg|template|iframe|form|nav|footer|aside|select|button|sup)\b[\s\S]*?<\/\1>/gi, ' ');
   const articles = [...h.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/gi)].map((m) => m[1]);
-  if (articles.length) return articles.sort((a, b) => b.length - a.length)[0];
-  const main = h.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
-  if (main) return main[1];
-  const body = h.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
-  return body ? body[1] : h;
+  if (articles.length) h = articles.sort((a, b) => b.length - a.length)[0];
+  else {
+    const main = h.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
+    const body = h.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
+    h = main ? main[1] : body ? body[1] : h;
+  }
+  // Stop at "References", "See also", "Comments"…
+  for (const m of h.matchAll(/<h[2-4]\b[^>]*>([\s\S]*?)<\/h[2-4]>/gi)) {
+    if (END_SECTIONS.test(stripTags(m[1]).trim())) {
+      h = h.slice(0, m.index);
+      break;
+    }
+  }
+  return h;
+}
+
+/** Table rows: a title in one cell, its year in another (Wikipedia lists and the like). */
+function fromTables(html, c) {
+  let n = 0;
+  for (const row of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const cells = [...row[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((m) => m[1]);
+    if (cells.length < 2) continue;
+    let title = null;
+    let year = null;
+    for (const cell of cells) {
+      const ital = cell.match(/<(i|em|cite)\b[^>]*>([\s\S]*?)<\/\1>/i);
+      const text = stripTags(cell).trim();
+      if (!title && ital) title = stripTags(ital[2]);
+      if (!year) {
+        const y = text.match(/^\(?((?:18|19|20)\d{2})\)?$/);
+        if (y) year = Number(y[1]);
+      }
+    }
+    if (title) {
+      c.add(title, { strength: year ? 3 : 2, year });
+      n += 1;
+    }
+  }
+  return n;
 }
 
 /** Any article, blog post or list page. */
 function fromHtml(html, c) {
   fromLdJson(html, c);
   const main = mainHtml(html);
-  for (const m of main.matchAll(/<(h[1-4]|li|em|i|cite|strong|b|dt|figcaption)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
+  fromTables(main, c);
+  for (const m of main.matchAll(/<(h[1-4]|li|em|i|cite|strong|b|dt|figcaption)\b([^>]*)>([\s\S]*?)<\/\1>/gi)) {
     const tag = m[1].toLowerCase();
-    const text = stripTags(m[2]);
+    // language menus: <li class="interlanguage-link"><a hreflang="pt">Português</a>
+    if (/\s(?:lang|hreflang)=|interlanguage|language/i.test(m[2]) || /<a\b[^>]*\shreflang=/i.test(m[3])) continue;
+    const text = stripTags(m[3]);
     if (!text || text.length > 120) continue;
-    const strength = { h1: 1, h2: 2, h3: 2, h4: 2, em: 2, i: 2, cite: 3, li: 2, strong: 1.5, b: 1.5, dt: 2, figcaption: 1 }[tag] || 1;
+    const strength = { h1: 1, h2: 2, h3: 2, h4: 2, em: 2, i: 2, cite: 2, li: 2, strong: 1.5, b: 1.5, dt: 2, figcaption: 1 }[tag] || 1;
     for (const line of text.split('\n')) c.add(line, { strength });
   }
   fromText(stripTags(main), c);
