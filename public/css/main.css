@@ -1053,8 +1053,8 @@ textarea { resize: vertical; min-height: 64px; }
 
 .star-input { position: relative; display: inline-flex; gap: 2px; width: max-content; }
 .star { font-size: 34px; line-height: 1; color: rgba(245, 236, 217, 0.18); }
-.star.full { color: var(--gold); text-shadow: 0 0 12px rgba(255, 200, 90, 0.45); }
-.star.half {
+.star.s-full { color: var(--gold); text-shadow: 0 0 12px rgba(255, 200, 90, 0.45); }
+.star.s-half {
   background: linear-gradient(90deg, var(--gold) 50%, rgba(245, 236, 217, 0.18) 50%);
   -webkit-background-clip: text;
   background-clip: text;

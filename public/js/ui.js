@@ -149,7 +149,7 @@ export function starInput(value, onChange) {
   const render = (shown) => {
     box.innerHTML = '';
     for (let i = 1; i <= 5; i += 1) {
-      const fill = shown >= i ? 'full' : shown >= i - 0.5 ? 'half' : 'empty';
+      const fill = shown >= i ? 's-full' : shown >= i - 0.5 ? 's-half' : 's-empty';
       const s = el(`<span class="star ${fill}" aria-hidden="true">★</span>`);
       box.append(s);
     }
@@ -171,7 +171,7 @@ export function starInput(value, onChange) {
   const paint = (shown) => {
     box.querySelectorAll('.star').forEach((s, i) => {
       const n = i + 1;
-      s.className = `star ${shown >= n ? 'full' : shown >= n - 0.5 ? 'half' : 'empty'}`;
+      s.className = `star ${shown >= n ? 's-full' : shown >= n - 0.5 ? 's-half' : 's-empty'}`;
     });
   };
   box.addEventListener('mouseleave', () => paint(current));

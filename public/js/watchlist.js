@@ -37,6 +37,12 @@ function displayName(names) {
 const langName = (code) => (code ? displayName({ type: 'language' }).of(code) || code : '');
 const regionName = (code) => (code ? displayName({ type: 'region' }).of(code) || code : '');
 
+/** Today's date where the visitor is, as YYYY-MM-DD */
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 const hue = (id) => [...String(id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 const avatar = (id, name, extra = '') =>
   `<span class="avatar" style="--h:${hue(id)}" title="${esc(name)}">${esc(initials(name))}${extra}</span>`;
@@ -454,12 +460,21 @@ export function listPage(listId) {
     }
 
     input.addEventListener('input', run);
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('focus', () => {
+      if (input.value.trim().length >= 2 && results.childElementCount) results.hidden = false;
+    });
+    // Escape anywhere in the search, or a click outside it, closes the results
+    searchBox.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        input.value = '';
         results.hidden = true;
+        input.focus();
       }
     });
+    const outside = (e) => {
+      if (!searchBox.isConnected) return document.removeEventListener('pointerdown', outside);
+      if (!searchBox.contains(e.target)) results.hidden = true;
+    };
+    document.addEventListener('pointerdown', outside);
   }
 
   // ---------- toolbar ----------
@@ -657,7 +672,7 @@ export function listPage(listId) {
           <button type="button" class="btn ${iWatched(item) ? '' : 'btn-ghost'}" data-watched aria-pressed="${iWatched(item)}">
             ${esc(iWatched(item) ? `✓ ${t('item.watched')}` : t('item.markWatched'))}</button>
           <label class="field field-inline"><span>${esc(t('item.watchedOn'))}</span>
-            <input type="date" data-date value="${esc(mine.watched_on || '')}" max="${new Date().toISOString().slice(0, 10)}" /></label>
+            <input type="date" data-date value="${esc(mine.watched_on || '')}" max="${today()}" /></label>
         </div>
 
         <label class="field item-block"><span>${esc(t('item.note'))}</span>
@@ -745,7 +760,7 @@ export function listPage(listId) {
         wBtn.setAttribute('aria-pressed', String(on));
         wBtn.textContent = on ? `✓ ${t('item.watched')}` : t('item.markWatched');
         if (on && !state.watched_on) {
-          state.watched_on = new Date().toISOString().slice(0, 10);
+          state.watched_on = today();
           dateInput.value = state.watched_on;
           persist();
         }
