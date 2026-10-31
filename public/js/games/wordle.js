@@ -8,7 +8,7 @@ import { esc, el, frag, toast, openSheet } from '../ui.js';
 import { ANSWERS, GUESSES } from './wordle-data.js';
 import {
   todayKey, dayNumber, hashString, rng, shuffle, msToMidnight, fmtCountdown,
-  loadState, saveState, keyboard, listenKeys, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
+  loadState, saveState, keyboard, listenKeys, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
 } from './common.js';
 
 const TRIES = 6;
@@ -243,6 +243,7 @@ export function wordlePage(mode = 'daily', arg) {
     const result = { won: state.won, score: state.won ? state.guesses.length : null, hintUsed: Boolean(state.hint) };
     try {
       if (mode === 'challenge') {
+        await ensureName();
         await db.saveChallengeResult(challenge.id, result);
       } else {
         await db.saveResult({
@@ -306,6 +307,7 @@ export function wordlePage(mode = 'daily', arg) {
       chBtn.addEventListener('click', async () => {
         chBtn.disabled = true;
         try {
+          await ensureName();
           const id = await track(
             db.createChallenge('cinewordle', { answer: answerIdx }, { won: state.won, score: state.won ? state.guesses.length : null, hintUsed: Boolean(state.hint) }),
           );

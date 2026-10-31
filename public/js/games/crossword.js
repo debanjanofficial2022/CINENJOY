@@ -8,7 +8,7 @@ import { esc, el, frag, toast, openSheet } from '../ui.js';
 import { generate, slotsOf } from './crossword-gen.js';
 import {
   todayKey, dayNumber, hashString, rng, msToMidnight, fmtCountdown, fmtTime,
-  loadState, saveState, keyboard, listenKeys, share, challengeUrl, boardHtml,
+  loadState, saveState, keyboard, listenKeys, ensureName, share, challengeUrl, boardHtml,
 } from './common.js';
 
 const CHECK_COST = 3; // seconds per checked letter
@@ -430,7 +430,10 @@ export function crosswordPage(mode = 'daily', arg) {
   async function record() {
     const result = { won: state.won, score: state.won ? totalSeconds() : null, hintUsed: Object.keys(state.revealed).length > 0 };
     try {
-      if (mode === 'challenge') await db.saveChallengeResult(challenge.id, result);
+      if (mode === 'challenge') {
+        await ensureName();
+        await db.saveChallengeResult(challenge.id, result);
+      }
       else
         await db.saveResult({
           game: 'crossword',
@@ -508,6 +511,7 @@ export function crosswordPage(mode = 'daily', arg) {
       chBtn.addEventListener('click', async () => {
         chBtn.disabled = true;
         try {
+          await ensureName();
           const id = await track(
             db.createChallenge(
               'crossword',

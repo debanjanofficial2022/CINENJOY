@@ -3,7 +3,7 @@
 import { t } from '../i18n.js';
 import * as db from '../data.js';
 import * as tmdb from '../tmdb.js';
-import { esc, el, toast } from '../ui.js';
+import { esc, el, toast, prompt } from '../ui.js';
 import { track } from '../loading.js';
 
 /** Today's date where the player is, as YYYY-MM-DD: the daily puzzle changes at local midnight. */
@@ -231,10 +231,17 @@ export function boardHtml(rows, fmtScore) {
     .join('')}</div>`;
 }
 
-/** Ask for a name (once) so friends recognise you on challenge boards. */
+/** Ask for a name (once) so friends recognise you on challenge boards. Skipping is fine. */
 export async function ensureName() {
-  const profile = await db.getProfile();
-  return profile.display_name || null;
+  try {
+    const profile = await db.getProfile();
+    if (profile.display_name) return profile.display_name;
+    const name = await prompt({ title: t('wl.yourName'), label: t('wl.personName'), max: 40 });
+    if (name) await db.updateProfile({ display_name: name });
+    return name;
+  } catch {
+    return null;
+  }
 }
 
 // ---------- After a game: the title itself ----------
