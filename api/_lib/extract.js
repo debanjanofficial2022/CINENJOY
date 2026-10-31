@@ -211,6 +211,9 @@ function fromText(text, c, { lines = false } = {}) {
       c.add(t, { strength: 3, year: Number(m[2]) });
       const poss = t.split(/['’]s\s+/);
       if (poss.length > 1) c.add(poss[poss.length - 1], { strength: 3, year: Number(m[2]) });
+      // "Vertigo and Parasite (1982)": also try the last part
+      const and = t.split(/\s+(?:and|&|y|et|und)\s+/i);
+      if (and.length > 1) c.add(and[and.length - 1], { strength: 3, year: Number(m[2]) });
     }
   }
 
