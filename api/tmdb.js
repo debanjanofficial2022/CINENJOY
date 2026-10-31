@@ -7,6 +7,7 @@ const ALLOWED = [
   /^(movie|tv)\/\d{1,9}$/,
   /^genre\/(movie|tv)\/list$/,
   /^trending\/(all|movie|tv)\/(day|week)$/,
+  /^(movie|tv)\/(top_rated|popular)$/,
 ];
 const PASS_PARAMS = ['query', 'page', 'language', 'append_to_response', 'region'];
 
