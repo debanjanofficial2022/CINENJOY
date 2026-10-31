@@ -2,6 +2,8 @@
 // CINE and ENJOY share the E. One N flips like a card from position 3 (CINE)
 // over the shared E to position 5 (ENJOY). It plays on page load, on hover and
 // in a loop while something is loading.
+// Once the N lands in ENJOY, the leftover "CI" and the empty N slot fade out and
+// an old film projector takes their place, throwing ENJOY onto the screen in its beam.
 
 const LETTERS = ['C', 'I', 'N', 'E', 'N', 'J', 'O', 'Y'];
 const N_CINE = 2; // position 3
@@ -33,6 +35,38 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
   card.setAttribute('aria-hidden', 'true');
   card.innerHTML = '<span class="face front">N</span><span class="face back">N</span>';
   el.append(card);
+
+  // The projector that replaces "CIN" while ENJOY is showing, and its beam of light.
+  const projector = document.createElement('span');
+  projector.className = 'projector';
+  projector.setAttribute('aria-hidden', 'true');
+  projector.innerHTML = `<svg viewBox="0 0 100 52" preserveAspectRatio="xMidYMid meet">
+    <g class="reel reel-a"><circle cx="30" cy="15" r="13"/><circle class="hub" cx="30" cy="15" r="3"/>
+      <circle class="hole" cx="30" cy="7" r="3.2"/><circle class="hole" cx="37" cy="19" r="3.2"/><circle class="hole" cx="23" cy="19" r="3.2"/></g>
+    <g class="reel reel-b"><circle cx="62" cy="15" r="13"/><circle class="hub" cx="62" cy="15" r="3"/>
+      <circle class="hole" cx="62" cy="7" r="3.2"/><circle class="hole" cx="69" cy="19" r="3.2"/><circle class="hole" cx="55" cy="19" r="3.2"/></g>
+    <path class="film" d="M30 15 L44 30 M62 15 L56 30" />
+    <rect class="body" x="14" y="28" width="66" height="18" rx="4"/>
+    <rect class="slot" x="22" y="33" width="20" height="3" rx="1.5"/>
+    <rect class="lens-hood" x="80" y="31" width="12" height="12" rx="2"/>
+    <circle class="lens" cx="93" cy="37" r="5"/>
+    <rect class="leg" x="22" y="46" width="5" height="6" rx="1"/><rect class="leg" x="67" y="46" width="5" height="6" rx="1"/>
+  </svg>`;
+  const beam = document.createElement('span');
+  beam.className = 'beam';
+  beam.setAttribute('aria-hidden', 'true');
+  el.append(projector, beam);
+
+  // Fit the projector over C, I and N, and the beam from its lens across ENJOY.
+  function placeProjector() {
+    const left = tiles[0].offsetLeft;
+    const right = tiles[N_CINE].offsetLeft + tiles[N_CINE].offsetWidth;
+    const top = tiles[0].offsetTop;
+    const h = tiles[0].offsetHeight;
+    Object.assign(projector.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${h}px` });
+    const end = tiles[LETTERS.length - 1].offsetLeft + tiles[LETTERS.length - 1].offsetWidth;
+    Object.assign(beam.style, { left: `${right - h * 0.05}px`, top: `${top - h * 0.38}px`, width: `${end - right + h * 0.3}px`, height: `${h * 1.76}px` });
+  }
 
   let busy = false;
   let loading = false;
@@ -77,8 +111,9 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
       if (reduceMotion()) {
         setPhase('cine');
         await wait(700);
+        placeProjector();
         setPhase('enjoy');
-        await wait(700);
+        await wait(1400);
         return;
       }
       // CINE lights up, ENJOY's N waits empty
@@ -86,17 +121,20 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
       ghost(N_ENJOY, true);
       await wait(380);
       await flip(N_CINE, N_ENJOY);
+      placeProjector();
       setPhase('enjoy');
-      await wait(650);
+      await wait(2200);
       // Loop back and forth while loading
       while (loading) {
-        await flip(N_ENJOY, N_CINE);
         setPhase('cine');
+        await wait(350);
+        await flip(N_ENJOY, N_CINE);
         await wait(260);
         if (!loading) break;
         await flip(N_CINE, N_ENJOY);
+        placeProjector();
         setPhase('enjoy');
-        await wait(260);
+        await wait(900);
       }
     } finally {
       // Rest state: the full word, both Ns in place
