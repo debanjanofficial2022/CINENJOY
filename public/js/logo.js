@@ -104,6 +104,16 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
     anim.cancel();
   }
 
+  // The projector starts rolling in while the N is still in the air, so the two
+  // movements blend into one: no pause between the flip and the projector.
+  async function flipToEnjoy() {
+    placeProjector();
+    const landing = flip(N_CINE, N_ENJOY);
+    await wait(300);
+    setPhase('enjoy');
+    await landing;
+  }
+
   async function play() {
     if (busy) return;
     busy = true;
@@ -120,20 +130,15 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
       setPhase('cine');
       ghost(N_ENJOY, true);
       await wait(380);
-      await flip(N_CINE, N_ENJOY);
-      placeProjector();
-      setPhase('enjoy');
+      await flipToEnjoy();
       await wait(2200);
       // Loop back and forth while loading
       while (loading) {
         setPhase('cine');
-        await wait(350);
         await flip(N_ENJOY, N_CINE);
         await wait(260);
         if (!loading) break;
-        await flip(N_CINE, N_ENJOY);
-        placeProjector();
-        setPhase('enjoy');
+        await flipToEnjoy();
         await wait(900);
       }
     } finally {
