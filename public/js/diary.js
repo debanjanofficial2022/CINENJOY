@@ -194,7 +194,7 @@ export function diaryPage() {
       </section>
       <div class="stat-grid">
         ${bars(t('diary.byMedium'), media, { label: (k) => t(`medium.${k}`) })}
-        ${bars(t('diary.byLanguage'), languages, { label: (k) => lang.of(k) || k })}
+        ${bars(t('diary.byLanguage'), languages, { label: (k) => lang.of(k === 'cn' ? 'yue' : k) || k })}
         ${bars(t('diary.byCountry'), countries, { label: (k) => region.of(k) || k })}
         ${bars(t('diary.byDecade'), decades, { limit: 12, label: (k) => t('wl.decade', { d: k }) })}
         ${bars(t('diary.byGenre'), genreRows)}

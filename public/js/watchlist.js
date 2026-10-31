@@ -34,7 +34,8 @@ function displayName(names) {
     return { of: (x) => x };
   }
 }
-const langName = (code) => (code ? displayName({ type: 'language' }).of(code) || code : '');
+// TMDB writes Cantonese as "cn"
+const langName = (code) => (code ? displayName({ type: 'language' }).of(code === 'cn' ? 'yue' : code) || code : '');
 const regionName = (code) => (code ? displayName({ type: 'region' }).of(code) || code : '');
 
 /** Today's date where the visitor is, as YYYY-MM-DD */

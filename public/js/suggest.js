@@ -35,8 +35,11 @@ function tasteProfile(entries) {
   return p;
 }
 
+/** Only well-rated titles that enough people have seen */
+const good = (r) => (r.vote_count || 0) >= 300 && (r.vote_average || 0) >= 6.6;
+
 function scoreCandidate(r, profile) {
-  let s = (r.vote_average || 0) / 2 + Math.min(r.vote_count || 0, 5000) / 5000;
+  let s = ((r.vote_average || 0) - 6) * 1.6 + Math.log10(Math.max(10, r.vote_count || 0)) * 0.6;
   for (const g of r.genre_ids || []) s += Math.max(-1, Math.min(2, (profile.genres.get(g) || 0) / 4));
   s += Math.max(-1, Math.min(2, (profile.langs.get(r.original_language) || 0) / 4));
   s += Math.max(-0.5, Math.min(1, (profile.media.get(r.media_type) || 0) / 8));
@@ -104,7 +107,7 @@ export function suggestionsPage() {
       recs.forEach((list, i) => {
         for (const r of list) {
           const k = keyOf(r);
-          if (seen.has(k) || r.adult) continue;
+          if (seen.has(k) || r.adult || !good(r)) continue;
           const prev = pool.get(k) || { r, seeds: new Set(), score: scoreCandidate(r, profile) };
           prev.seeds.add(i);
           pool.set(k, prev);
@@ -140,30 +143,39 @@ export function suggestionsPage() {
     }
   }
 
-  /** A highly rated film in a language you rarely watch, from a decade you rarely watch. */
+  /** A highly rated title in a language you rarely watch, from a decade you rarely watch. */
   async function comfortPick(profile) {
     const yours = new Set([...profile.langs.entries()].filter(([, w]) => w > 0).map(([k]) => k));
     const choices = COMFORT_LANGS.filter((l) => !yours.has(l));
     if (!choices.length) return null;
-    const lang = choices[dayIndex() % choices.length];
-    const decadesSeen = [...profile.decades.entries()].sort((a, b) => b[1] - a[1]).map(([d]) => d);
+    const start = dayIndex() % choices.length;
     const media = (profile.media.get('tv') || 0) > (profile.media.get('movie') || 0) ? 'movie' : dayIndex() % 3 === 0 ? 'tv' : 'movie';
-    const d = await api(`discover/${media}`, {
-      with_original_language: lang,
-      sort_by: 'vote_average.desc',
-      'vote_count.gte': media === 'movie' ? 800 : 300,
-      page: 1,
-    });
-    const results = (d.results || []).map((r) => ({ ...r, media_type: media })).filter((r) => !seen.has(keyOf(r)));
-    if (!results.length) return null;
-    // Prefer a decade you have watched least
+    const decadesSeen = [...profile.decades.entries()].sort((a, b) => b[1] - a[1]).map(([d]) => d);
     const decadeOf = (r) => Math.floor(Number(String(r.release_date || r.first_air_date || '').slice(0, 4)) / 10) * 10;
-    results.sort((a, b) => {
-      const ra = decadesSeen.indexOf(decadeOf(a));
-      const rb = decadesSeen.indexOf(decadeOf(b));
-      return (ra === -1 ? -1 : ra) - (rb === -1 ? -1 : rb) || -((a.vote_average || 0) - (b.vote_average || 0));
-    });
-    return { lang, item: results[dayIndex() % Math.min(3, results.length)] };
+    // Today's language first; if it has nothing well known enough, the next ones
+    for (let k = 0; k < Math.min(4, choices.length); k += 1) {
+      const lang = choices[(start + k) % choices.length];
+      for (const minVotes of media === 'movie' ? [800, 200, 60] : [300, 80, 30]) {
+        const d = await api(`discover/${media}`, {
+          with_original_language: lang,
+          sort_by: 'vote_average.desc',
+          'vote_count.gte': minVotes,
+          page: 1,
+        });
+        const results = (d.results || [])
+          .map((r) => ({ ...r, media_type: media }))
+          .filter((r) => !seen.has(keyOf(r)) && (r.vote_average || 0) >= 6.8);
+        if (!results.length) continue;
+        // Prefer a decade you have watched least
+        results.sort((a, b) => {
+          const ra = decadesSeen.indexOf(decadeOf(a));
+          const rb = decadesSeen.indexOf(decadeOf(b));
+          return (ra === -1 ? -1 : ra) - (rb === -1 ? -1 : rb) || (b.vote_average || 0) - (a.vote_average || 0);
+        });
+        return { lang, item: results[dayIndex() % Math.min(3, results.length)] };
+      }
+    }
+    return null;
   }
 
   function card(r, extra = '') {
