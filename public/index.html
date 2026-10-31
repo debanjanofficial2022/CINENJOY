@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>CINENJOY</title>
+  <meta name="description" content="Track, share and play with films, series and anime in any language." />
+  <meta name="theme-color" content="#0d0809" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+  <header class="topbar">
+    <a href="/" class="brand" data-link aria-label="CINENJOY home">
+      <span class="brand-mark" id="brand-logo"></span>
+    </a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="/watchlist" data-link data-nav="watchlist" data-i18n="nav.watchlist">Watchlist</a>
+      <a href="/games" data-link data-nav="games" data-i18n="nav.games">Games</a>
+      <a href="/lobby" data-link data-nav="lobby" data-i18n="nav.lobby">Lobby</a>
+    </nav>
+    <label class="lang">
+      <span class="sr" data-i18n="language">Language</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 6h-3a15.6 15.6 0 0 0-1.3-4 8 8 0 0 1 4.3 4ZM12 4c.8 1.1 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.9 1.9-4ZM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3Zm.8 2h3a15.6 15.6 0 0 0 1.3 4 8 8 0 0 1-4.3-4Zm3-8h-3a8 8 0 0 1 4.3-4 15.6 15.6 0 0 0-1.3 4ZM12 20c-.8-1.1-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.9-1.9 4Zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4Zm.3 6a15.6 15.6 0 0 0 1.3-4h3a8 8 0 0 1-4.3 4Zm1.7-6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4Z"/></svg>
+      <select id="lang-select">
+        <option value="en">English</option>
+        <option value="zh-CN">简体中文</option>
+        <option value="es">Español</option>
+      </select>
+    </label>
+  </header>
+
+  <main id="main" tabindex="-1"></main>
+
+  <footer class="credits">
+    <p data-i18n="credits.tmdb">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    <p data-i18n="credits.anilist">Anime details from AniList.</p>
+    <p class="fine">© <span id="year"></span> CINENJOY</p>
+  </footer>
+
+  <nav class="tabbar" aria-label="Sections">
+    <a href="/" data-link data-nav="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg>
+      <span data-i18n="nav.home">Home</span>
+    </a>
+    <a href="/watchlist" data-link data-nav="watchlist">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/></svg>
+      <span data-i18n="nav.watchlist">Watchlist</span>
+    </a>
+    <a href="/games" data-link data-nav="games">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10a5 5 0 0 1 4.9 6l-.7 3.6a2.2 2.2 0 0 1-3.8 1L15.5 15h-7l-1.9 2.6a2.2 2.2 0 0 1-3.8-1L2.1 13A5 5 0 0 1 7 7Zm0 3v1.5H5.5v1.5H7v1.5h1.5V13H10v-1.5H8.5V10H7Zm9.5 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm-2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg>
+      <span data-i18n="nav.games">Games</span>
+    </a>
+    <a href="/lobby" data-link data-nav="lobby">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18v-6a8 8 0 0 1 16 0v6h1v2H3v-2h1Zm3-3v3h3v-3H7Zm7 0v3h3v-3h-3ZM11 2h2v2h-2V2Z"/></svg>
+      <span data-i18n="nav.lobby">Lobby</span>
+    </a>
+  </nav>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
