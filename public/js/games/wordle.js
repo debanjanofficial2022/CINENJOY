@@ -75,10 +75,10 @@ export function wordlePage(mode = 'daily', arg) {
   function renderHead() {
     const label =
       mode === 'daily'
-        ? t('games.dailyN', { n: dayNumber() })
+        ? t('play.dailyN', { n: dayNumber() })
         : mode === 'practice'
-          ? t('games.practice')
-          : t('games.challenge');
+          ? t('play.practice')
+          : t('play.challenge');
     head.replaceChildren(
       frag(`
       <a class="back" href="/games" data-link>‹ ${esc(t('nav.games'))}</a>
@@ -87,10 +87,10 @@ export function wordlePage(mode = 'daily', arg) {
         <span class="chip">${esc(label)}</span>
       </div>
       <div class="game-links">
-        <button type="button" class="link-btn" data-help>${esc(t('games.howToPlay'))}</button>
-        ${mode !== 'daily' ? `<a class="link-btn" href="/games/cinewordle" data-link>${esc(t('games.daily'))}</a>` : ''}
-        ${mode !== 'practice' ? `<a class="link-btn" href="/games/cinewordle/practice" data-link>${esc(t('games.practice'))}</a>` : ''}
-        <button type="button" class="link-btn" data-stats>${esc(t('games.stats'))}</button>
+        <button type="button" class="link-btn" data-help>${esc(t('play.howToPlay'))}</button>
+        ${mode !== 'daily' ? `<a class="link-btn" href="/games/cinewordle" data-link>${esc(t('play.daily'))}</a>` : ''}
+        ${mode !== 'practice' ? `<a class="link-btn" href="/games/cinewordle/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
+        <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
       </div>`),
     );
     head.querySelector('[data-help]').addEventListener('click', showHelp);
@@ -109,13 +109,13 @@ export function wordlePage(mode = 'daily', arg) {
         const st = marks ? marks[i] : ch ? 'typed' : 'empty';
         tiles.push(
           `<span class="tile-w" data-state="${st}" style="--i:${i}" ${
-            marks ? `aria-label="${esc(`${ch} ${t(`games.state.${st}`)}`)}"` : ''
+            marks ? `aria-label="${esc(`${ch} ${t(`play.state.${st}`)}`)}"` : ''
           }>${esc(ch)}</span>`,
         );
       }
       rows.push(`<div class="w-row${r === state.guesses.length && !state.done ? ' is-current' : ''}" role="row">${tiles.join('')}</div>`);
     }
-    boardBox.innerHTML = `<div class="w-board" role="grid" aria-label="${esc(t('games.board'))}" style="--cols:${len()}">${rows.join('')}</div>`;
+    boardBox.innerHTML = `<div class="w-board" role="grid" aria-label="${esc(t('play.board'))}" style="--cols:${len()}">${rows.join('')}</div>`;
   }
 
   function markKeyboard() {
@@ -131,7 +131,7 @@ export function wordlePage(mode = 'daily', arg) {
       <span class="muted">${esc(t('cw.letters', { n: len() }))}</span>
       ${
         state.done
-          ? `<button type="button" class="btn btn-small" data-result>${esc(t('games.seeResult'))}</button>`
+          ? `<button type="button" class="btn btn-small" data-result>${esc(t('play.seeResult'))}</button>`
           : `<button type="button" class="btn btn-small btn-ghost" data-hint ${used ? 'disabled' : ''}>💡 ${esc(
               used ? t('cw.hintUsed') : t('cw.useHint'),
             )}</button>`
@@ -268,7 +268,7 @@ export function wordlePage(mode = 'daily', arg) {
       mode === 'daily'
         ? `CINENJOY CineWordle #${dayNumber()}`
         : mode === 'challenge'
-          ? `CINENJOY CineWordle · ${t('games.challenge')}`
+          ? `CINENJOY CineWordle · ${t('play.challenge')}`
           : 'CINENJOY CineWordle';
     const sc = `${state.won ? state.guesses.length : 'X'}/${TRIES}${state.hint ? ' 💡' : ''}`;
     const grid = state.guesses.map((g) => score(g, answer().w).map((s) => EMOJI[s]).join('')).join('\n');
@@ -284,9 +284,9 @@ export function wordlePage(mode = 'daily', arg) {
         }</p>
         <div data-card></div>
         <div class="result-actions">
-          <button type="button" class="btn" data-share>${esc(t('games.shareResult'))}</button>
-          ${mode !== 'challenge' ? `<button type="button" class="btn btn-ghost" data-challenge>${esc(t('games.challengeFriend'))}</button>` : ''}
-          ${mode !== 'practice' ? `<a class="btn btn-ghost" href="/games/cinewordle/practice" data-link>${esc(t('games.playPractice'))}</a>` : `<button type="button" class="btn btn-ghost" data-again>${esc(t('games.playAgain'))}</button>`}
+          <button type="button" class="btn" data-share>${esc(t('play.shareResult'))}</button>
+          ${mode !== 'challenge' ? `<button type="button" class="btn btn-ghost" data-challenge>${esc(t('play.challengeFriend'))}</button>` : ''}
+          ${mode !== 'practice' ? `<a class="btn btn-ghost" href="/games/cinewordle/practice" data-link>${esc(t('play.playPractice'))}</a>` : `<button type="button" class="btn btn-ghost" data-again>${esc(t('play.playAgain'))}</button>`}
         </div>
         <div data-extra></div>
       </div>`);
@@ -311,7 +311,7 @@ export function wordlePage(mode = 'daily', arg) {
           const id = await track(
             db.createChallenge('cinewordle', { answer: answerIdx }, { won: state.won, score: state.won ? state.guesses.length : null, hintUsed: Boolean(state.hint) }),
           );
-          await share(t('games.challengeText', { game: 'CineWordle' }), challengeUrl('cinewordle', id));
+          await share(t('play.challengeText', { game: 'CineWordle' }), challengeUrl('cinewordle', id));
         } catch (err) {
           console.warn(err);
           toast(t('errors.generic'), 'error');
@@ -322,7 +322,7 @@ export function wordlePage(mode = 'daily', arg) {
     const extra = box.querySelector('[data-extra]');
     if (mode === 'daily') {
       const results = await db.myResults('cinewordle').catch(() => []);
-      extra.innerHTML = `${statsHtml(stats(results))}<p class="muted next-in">${esc(t('games.nextIn'))} <b data-cd>${fmtCountdown(msToMidnight())}</b></p>`;
+      extra.innerHTML = `${statsHtml(stats(results))}<p class="muted next-in">${esc(t('play.nextIn'))} <b data-cd>${fmtCountdown(msToMidnight())}</b></p>`;
       const cd = extra.querySelector('[data-cd]');
       const timer = setInterval(() => {
         if (!cd.isConnected) return clearInterval(timer);
@@ -336,12 +336,12 @@ export function wordlePage(mode = 'daily', arg) {
 
   async function showStats() {
     const results = await track(db.myResults('cinewordle')).catch(() => []);
-    openSheet({ title: t('games.stats'), body: el(`<div>${statsHtml(stats(results))}</div>`) });
+    openSheet({ title: t('play.stats'), body: el(`<div>${statsHtml(stats(results))}</div>`) });
   }
 
   function showHelp() {
     openSheet({
-      title: t('games.howToPlay'),
+      title: t('play.howToPlay'),
       body: el(`<div class="help">
         <p>${esc(t('cw.help1'))}</p>
         <p>${esc(t('cw.help2'))}</p>
@@ -421,7 +421,7 @@ export function wordlePage(mode = 'daily', arg) {
       }
       if (!challenge || challenge.game !== 'cinewordle' || !ANSWERS[challenge.puzzle && challenge.puzzle.answer]) {
         renderHead();
-        boardBox.replaceChildren(el(`<div class="error-box"><p>${esc(t('games.challengeMissing'))}</p></div>`));
+        boardBox.replaceChildren(el(`<div class="error-box"><p>${esc(t('play.challengeMissing'))}</p></div>`));
         return;
       }
       answerIdx = challenge.puzzle.answer;

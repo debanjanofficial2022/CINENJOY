@@ -131,7 +131,7 @@ const dict = {
         title_only: 'YouTube only shared this video’s title. If titles are in its description, copy the description and paste it here.',
       },
     },
-    games: {
+    play: {
       keyboard: 'Keyboard', enter: 'Enter', backspace: 'Delete letter', board: 'Guesses',
       daily: 'Daily', dailyN: 'Daily #{n}', practice: 'Practice', challenge: 'Challenge', howToPlay: 'How to play', stats: 'Stats',
       played: 'Played', winPct: 'Win %', streak: 'Streak', bestStreak: 'Best streak', distribution: 'Guesses per win',
@@ -299,7 +299,7 @@ const dict = {
         title_only: 'YouTube 只提供了这个视频的标题。如果片名在简介里，请复制简介并粘贴到这里。',
       },
     },
-    games: {
+    play: {
       keyboard: '键盘', enter: '确定', backspace: '删除字母', board: '猜测记录',
       daily: '每日', dailyN: '每日 #{n}', practice: '练习', challenge: '挑战', howToPlay: '玩法', stats: '统计',
       played: '已玩', winPct: '胜率 %', streak: '连胜', bestStreak: '最长连胜', distribution: '每次获胜用的次数',
@@ -467,7 +467,7 @@ const dict = {
         title_only: 'YouTube solo compartió el título de este vídeo. Si los títulos están en la descripción, cópiala y pégala aquí.',
       },
     },
-    games: {
+    play: {
       keyboard: 'Teclado', enter: 'Enviar', backspace: 'Borrar letra', board: 'Intentos',
       daily: 'Diario', dailyN: 'Diario #{n}', practice: 'Práctica', challenge: 'Reto', howToPlay: 'Cómo se juega', stats: 'Estadísticas',
       played: 'Jugadas', winPct: '% victorias', streak: 'Racha', bestStreak: 'Mejor racha', distribution: 'Intentos por victoria',

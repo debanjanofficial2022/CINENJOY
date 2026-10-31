@@ -90,17 +90,17 @@ const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '⏎ZXCVBNM⌫'];
 
 /** onKey receives 'A'..'Z', 'ENTER' or 'BACK'. */
 export function keyboard(onKey, { enter = true } = {}) {
-  const box = el(`<div class="kb" role="group" aria-label="${esc(t('games.keyboard'))}"></div>`);
+  const box = el(`<div class="kb" role="group" aria-label="${esc(t('play.keyboard'))}"></div>`);
   const keys = {};
   for (const row of ROWS) {
     const r = el('<div class="kb-row"></div>');
     for (const ch of row) {
       if (ch === '⏎' && !enter) continue;
       const name = ch === '⏎' ? 'ENTER' : ch === '⌫' ? 'BACK' : ch;
-      const label = ch === '⏎' ? t('games.enter') : ch === '⌫' ? '⌫' : ch;
+      const label = ch === '⏎' ? t('play.enter') : ch === '⌫' ? '⌫' : ch;
       const b = el(
         `<button type="button" class="kb-key${name.length > 1 ? ' kb-wide' : ''}" data-key="${name}" aria-label="${esc(
-          name === 'BACK' ? t('games.backspace') : label,
+          name === 'BACK' ? t('play.backspace') : label,
         )}">${esc(label)}</button>`,
       );
       b.addEventListener('click', () => onKey(name));
@@ -179,14 +179,14 @@ export function stats(results, maxGuesses = 6) {
 export function statsHtml(s, { distLabel = true } = {}) {
   const max = Math.max(1, ...s.dist);
   return `<div class="stats">
-    <div class="stat"><b>${s.played}</b><span>${esc(t('games.played'))}</span></div>
-    <div class="stat"><b>${s.winPct}</b><span>${esc(t('games.winPct'))}</span></div>
-    <div class="stat"><b>${s.streak}</b><span>${esc(t('games.streak'))}</span></div>
-    <div class="stat"><b>${s.best}</b><span>${esc(t('games.bestStreak'))}</span></div>
+    <div class="stat"><b>${s.played}</b><span>${esc(t('play.played'))}</span></div>
+    <div class="stat"><b>${s.winPct}</b><span>${esc(t('play.winPct'))}</span></div>
+    <div class="stat"><b>${s.streak}</b><span>${esc(t('play.streak'))}</span></div>
+    <div class="stat"><b>${s.best}</b><span>${esc(t('play.bestStreak'))}</span></div>
   </div>
   ${
     distLabel
-      ? `<div class="dist" aria-label="${esc(t('games.distribution'))}">${s.dist
+      ? `<div class="dist" aria-label="${esc(t('play.distribution'))}">${s.dist
           .map(
             (n, i) =>
               `<div class="dist-row"><span>${i + 1}</span><span class="dist-bar" style="width:${Math.max(8, (n / max) * 100)}%">${n}</span></div>`,
@@ -210,7 +210,7 @@ export async function share(text, url) {
   }
   try {
     await navigator.clipboard.writeText(full);
-    toast(t('games.copied'));
+    toast(t('play.copied'));
   } catch {
     toast(t('errors.generic'), 'error');
   }
@@ -220,7 +220,7 @@ export const challengeUrl = (game, id) => `${location.origin}/games/${game}/c/${
 
 export function boardHtml(rows, fmtScore) {
   if (!rows.length) return '';
-  return `<div class="board-list"><p class="label">${esc(t('games.challengeBoard'))}</p>${rows
+  return `<div class="board-list"><p class="label">${esc(t('play.challengeBoard'))}</p>${rows
     .map(
       (r, i) => `<div class="board-row${r.me ? ' is-me' : ''}">
         <span class="board-rank">${i + 1}</span>
@@ -252,10 +252,10 @@ export function titleCard(entry) {
     <div class="answer-card">
       <span class="thumb thumb-lg"></span>
       <div>
-        <p class="label">${esc(t('games.theAnswer'))}</p>
+        <p class="label">${esc(t('play.theAnswer'))}</p>
         <h3 class="answer-title"></h3>
         <p class="pc-meta answer-meta"></p>
-        <button type="button" class="btn btn-small" data-add>+ ${esc(t('games.addToWatchlist'))}</button>
+        <button type="button" class="btn btn-small" data-add>+ ${esc(t('play.addToWatchlist'))}</button>
       </div>
     </div>`);
   card.querySelector('.answer-title').textContent = entry.label || entry.w;

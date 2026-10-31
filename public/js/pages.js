@@ -42,7 +42,7 @@ const LOBBY = [
 
 const statusChip = ({ phase, step, href }) =>
   href
-    ? `<span class="chip chip-next">▶ ${esc(t('games.playNow'))}</span>`
+    ? `<span class="chip chip-next">▶ ${esc(t('play.playNow'))}</span>`
     : step
     ? `<span class="chip chip-next">${esc(t('status.next'))} · ${esc(t('status.step', { n: step }))}</span>`
     : `<span class="chip">${esc(t('status.phase', { n: phase }))}</span>`;

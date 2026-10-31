@@ -97,7 +97,7 @@ export function crosswordPage(mode = 'daily', arg) {
 
   function renderHead() {
     const label =
-      mode === 'daily' ? t('games.dailyN', { n: dayNumber() }) : mode === 'practice' ? t('games.practice') : t('games.challenge');
+      mode === 'daily' ? t('play.dailyN', { n: dayNumber() }) : mode === 'practice' ? t('play.practice') : t('play.challenge');
     head.replaceChildren(
       frag(`
       <a class="back" href="/games" data-link>‹ ${esc(t('nav.games'))}</a>
@@ -106,10 +106,10 @@ export function crosswordPage(mode = 'daily', arg) {
         <span class="chip">${esc(label)}</span>
       </div>
       <div class="game-links">
-        <button type="button" class="link-btn" data-help>${esc(t('games.howToPlay'))}</button>
-        ${mode !== 'daily' ? `<a class="link-btn" href="/games/crossword" data-link>${esc(t('games.daily'))}</a>` : ''}
-        ${mode !== 'practice' ? `<a class="link-btn" href="/games/crossword/practice" data-link>${esc(t('games.practice'))}</a>` : ''}
-        <button type="button" class="link-btn" data-stats>${esc(t('games.stats'))}</button>
+        <button type="button" class="link-btn" data-help>${esc(t('play.howToPlay'))}</button>
+        ${mode !== 'daily' ? `<a class="link-btn" href="/games/crossword" data-link>${esc(t('play.daily'))}</a>` : ''}
+        ${mode !== 'practice' ? `<a class="link-btn" href="/games/crossword/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
+        <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
       </div>
       ${getLang() !== 'en' ? `<p class="fine-print">${esc(t('mini.englishNote'))}</p>` : ''}`),
     );
@@ -138,7 +138,7 @@ export function crosswordPage(mode = 'daily', arg) {
             <option value="word">${esc(t('mini.word'))}</option>
             <option value="all">${esc(t('mini.puzzle'))}</option>
           </select></label>
-        ${state.done ? `<button type="button" class="btn btn-small" data-result>${esc(t('games.seeResult'))}</button>` : ''}
+        ${state.done ? `<button type="button" class="btn btn-small" data-result>${esc(t('play.seeResult'))}</button>` : ''}
       </div>`),
     );
     const ch = tools.querySelector('[data-check]');
@@ -472,8 +472,8 @@ export function crosswordPage(mode = 'daily', arg) {
       d.setDate(d.getDate() - 1);
     }
     return `<div class="stats">
-      <div class="stat"><b>${days.size}</b><span>${esc(t('games.played'))}</span></div>
-      <div class="stat"><b>${streak}</b><span>${esc(t('games.streak'))}</span></div>
+      <div class="stat"><b>${days.size}</b><span>${esc(t('play.played'))}</span></div>
+      <div class="stat"><b>${streak}</b><span>${esc(t('play.streak'))}</span></div>
       <div class="stat"><b>${best != null ? fmtTime(best) : '–'}</b><span>${esc(t('mini.bestTime'))}</span></div>
       <div class="stat"><b>${avg != null ? fmtTime(avg) : '–'}</b><span>${esc(t('mini.avgTime'))}</span></div>
     </div>`;
@@ -485,12 +485,12 @@ export function crosswordPage(mode = 'daily', arg) {
         <p class="result-head">${esc(state.won ? t('mini.solved', { time: fmtTime(totalSeconds()) }) : t('mini.revealedAll'))}</p>
         ${state.penalty ? `<p class="muted">${esc(t('mini.penaltyNote', { time: fmtTime(state.penalty) }))}</p>` : ''}
         <div class="result-actions">
-          <button type="button" class="btn" data-share>${esc(t('games.shareResult'))}</button>
-          ${mode !== 'challenge' ? `<button type="button" class="btn btn-ghost" data-challenge>${esc(t('games.challengeFriend'))}</button>` : ''}
+          <button type="button" class="btn" data-share>${esc(t('play.shareResult'))}</button>
+          ${mode !== 'challenge' ? `<button type="button" class="btn btn-ghost" data-challenge>${esc(t('play.challengeFriend'))}</button>` : ''}
           ${
             mode !== 'practice'
-              ? `<a class="btn btn-ghost" href="/games/crossword/practice" data-link>${esc(t('games.playPractice'))}</a>`
-              : `<button type="button" class="btn btn-ghost" data-again>${esc(t('games.playAgain'))}</button>`
+              ? `<a class="btn btn-ghost" href="/games/crossword/practice" data-link>${esc(t('play.playPractice'))}</a>`
+              : `<button type="button" class="btn btn-ghost" data-again>${esc(t('play.playAgain'))}</button>`
           }
         </div>
         <div data-extra></div>
@@ -519,7 +519,7 @@ export function crosswordPage(mode = 'daily', arg) {
               { won: state.won, score: state.won ? totalSeconds() : null, hintUsed: Object.keys(state.revealed).length > 0 },
             ),
           );
-          await share(t('games.challengeText', { game: t('mini.title') }), challengeUrl('crossword', id));
+          await share(t('play.challengeText', { game: t('mini.title') }), challengeUrl('crossword', id));
         } catch (err) {
           console.warn(err);
           toast(t('errors.generic'), 'error');
@@ -529,7 +529,7 @@ export function crosswordPage(mode = 'daily', arg) {
       });
     const extra = box.querySelector('[data-extra]');
     if (mode === 'daily') {
-      extra.innerHTML = `${await miniStatsHtml()}<p class="muted next-in">${esc(t('games.nextIn'))} <b data-cd>${fmtCountdown(msToMidnight())}</b></p>`;
+      extra.innerHTML = `${await miniStatsHtml()}<p class="muted next-in">${esc(t('play.nextIn'))} <b data-cd>${fmtCountdown(msToMidnight())}</b></p>`;
       const cd = extra.querySelector('[data-cd]');
       const tm = setInterval(() => {
         if (!cd.isConnected) return clearInterval(tm);
@@ -542,12 +542,12 @@ export function crosswordPage(mode = 'daily', arg) {
   }
 
   async function showStats() {
-    openSheet({ title: t('games.stats'), body: el(`<div>${await miniStatsHtml()}</div>`) });
+    openSheet({ title: t('play.stats'), body: el(`<div>${await miniStatsHtml()}</div>`) });
   }
 
   function showHelp() {
     openSheet({
-      title: t('games.howToPlay'),
+      title: t('play.howToPlay'),
       body: el(`<div class="help">
         <p>${esc(t('mini.help1'))}</p>
         <p>${esc(t('mini.help2'))}</p>
@@ -630,7 +630,7 @@ export function crosswordPage(mode = 'daily', arg) {
         challenge = await track(db.getChallenge(arg));
         if (!challenge || challenge.game !== 'crossword' || !challenge.puzzle || !Array.isArray(challenge.puzzle.grid)) {
           renderHead();
-          gridBox.replaceChildren(el(`<div class="error-box"><p>${esc(t('games.challengeMissing'))}</p></div>`));
+          gridBox.replaceChildren(el(`<div class="error-box"><p>${esc(t('play.challengeMissing'))}</p></div>`));
           return;
         }
         puzzleKey = `c-${challenge.id}`;

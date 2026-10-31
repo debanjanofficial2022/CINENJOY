@@ -346,6 +346,7 @@ export function watchLive(scope, onChange) {
       }
     }
   };
+}
 
 // ---------- Games: results, streaks, challenge links ----------
 
