@@ -46,7 +46,7 @@ function scoreResult(c, r) {
 
   const y = Number(String(r.release_date || r.first_air_date || '').slice(0, 4)) || null;
   if (c.year && y) s += Math.abs(y - c.year) <= 1 ? 0.25 : -0.6;
-  if (c.hint === 'anime' && r.original_language === 'ja') s += 0.1;
+  if (c.hint === 'anime') s += r.original_language === 'ja' && (r.genre_ids || []).includes(16) ? 0.15 : -0.3;
   if ((c.hint === 'movie' || c.hint === 'tv') && r.media_type === c.hint) s += 0.05;
   const votes = r.vote_count || 0;
   s += (Math.min(votes, 5000) / 5000) * 0.05;
@@ -67,10 +67,27 @@ async function matchOne(c, pageLang) {
     return null;
   }
   const d = await tmdb('search/multi', { query: c.title, language: searchLang(c.title, pageLang), page: 1 });
+  const results = (d.results || []).filter((r) => r.media_type === 'movie' || r.media_type === 'tv').slice(0, 10);
   let best = null;
-  for (const r of (d.results || []).filter((r) => r.media_type === 'movie' || r.media_type === 'tv').slice(0, 10)) {
+  for (const r of results) {
     const s = scoreResult(c, r);
     if (s > 0 && (!best || s > best.score)) best = { result: shape(r), score: s };
+  }
+  // Site lists (MyAnimeList romaji, Letterboxd) are titles for sure: if no name
+  // matches exactly, trust the search's own first result when it fits.
+  if ((!best || best.score < 0.95) && c.strength >= 4) {
+    const fits = (r) => {
+      const y = Number(String(r.release_date || r.first_air_date || '').slice(0, 4)) || null;
+      if (c.year && y && Math.abs(y - c.year) > 1) return false;
+      if (c.hint === 'anime') return r.original_language === 'ja' && (r.genre_ids || []).includes(16);
+      if (c.hint === 'movie') return r.media_type === 'movie';
+      return true;
+    };
+    const i = results.findIndex(fits);
+    if (i >= 0) {
+      const s = i === 0 ? 0.96 : 0.76;
+      if (!best || s > best.score) best = { result: shape(results[i]), score: s };
+    }
   }
   return best;
 }
@@ -256,6 +273,9 @@ module.exports = async function handler(req, res) {
       return send(res, 400, { ok: false, error: 'bad_request' });
     }
 
+    if (input.debug) {
+      return send(res, 200, { ok: true, debug: true, source: { title: source.title, kind: source.kind, lang: source.lang }, cands: source.cands });
+    }
     if (!source.cands.length) {
       return send(res, 200, { ok: true, source: { title: source.title, kind: source.kind }, results: [], note: source.note || null });
     }
