@@ -81,6 +81,16 @@ const JUNK = new Set(
     'where to watch', 'streaming', 'netflix', 'hulu', 'disney', 'amazon prime', 'prime video', 'hbo max',
     'max', 'apple tv', 'youtube', 'reddit', 'letterboxd', 'imdb', 'myanimelist', 'twitter', 'instagram',
     'facebook', 'tiktok', 'patreon', 'discord', 'merch', 'chapters', 'timestamps', 'links', 'music',
+    // publications, often set in italics in articles
+    'the guardian', 'the observer', 'observer', 'the new york times', 'new york times', 'the new yorker',
+    'variety', 'the hollywood reporter', 'hollywood reporter', 'sight and sound', 'sight & sound',
+    'empire magazine', 'rolling stone', 'time magazine', 'the atlantic', 'indiewire', 'vulture', 'slate',
+    'cahiers du cinema', 'film comment', 'the telegraph', 'the daily telegraph', 'the independent',
+    'le monde', 'the washington post', 'washington post', 'los angeles times', 'the times', 'the sunday times',
+    'the wall street journal', 'wall street journal', 'the new republic', 'village voice', 'the village voice',
+    'entertainment weekly', 'total film', 'little white lies', 'screen daily', 'deadline', 'collider',
+    'screen rant', 'slant magazine', 'the a.v. club', 'av club', 'the av club', 'newsweek', 'bbc', 'cnn',
+    'el país', 'el pais', 'fotogramas', 'cinemania', '人民日报', '豆瓣',
   ].map(norm),
 );
 

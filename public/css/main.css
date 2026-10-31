@@ -1137,3 +1137,6 @@ input[type='url'] {
 .pick input[type='checkbox'] { width: 20px; height: 20px; accent-color: var(--gold); flex: none; }
 .chip-maybe { display: inline-block; margin: 0 0 0 6px; padding: 1px 7px; font-size: 11px; vertical-align: 2px; border-color: rgba(242, 194, 90, 0.5); color: var(--gold-2); }
 .import-foot { position: sticky; bottom: -22px; display: flex; justify-content: flex-end; padding: 12px 0 4px; background: linear-gradient(180deg, transparent, #150b0d 30%); }
+
+/* Anything marked hidden stays hidden, whatever its own display style */
+[hidden] { display: none !important; }
