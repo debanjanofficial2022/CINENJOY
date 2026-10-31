@@ -3,6 +3,8 @@ import { t, getLang, setLang, onLangChange } from './i18n.js';
 import { createLogo } from './logo.js';
 import * as pages from './pages.js';
 import { listsPage, listPage, joinPage } from './watchlist.js';
+import { diaryPage } from './diary.js';
+import { suggestionsPage } from './suggest.js';
 import { registerLoader } from './loading.js';
 import { initAccount } from './data.js';
 
@@ -11,6 +13,8 @@ const routes = {
   '/watchlist': { view: listsPage, nav: 'watchlist', title: 'nav.watchlist' },
   '/games': { view: pages.games, nav: 'games', title: 'nav.games' },
   '/lobby': { view: pages.lobby, nav: 'lobby', title: 'nav.lobby' },
+  '/lobby/diary': { view: diaryPage, nav: 'lobby', title: 'diary.title' },
+  '/watchlist/suggestions': { view: suggestionsPage, nav: 'watchlist', title: 'sug.title' },
 };
 
 // Addresses with a value in them: /watchlist/<list id>, /join/<invite code>

@@ -8,8 +8,15 @@ const ALLOWED = [
   /^genre\/(movie|tv)\/list$/,
   /^trending\/(all|movie|tv)\/(day|week)$/,
   /^(movie|tv)\/(top_rated|popular)$/,
+  /^(movie|tv)\/\d{1,9}\/(recommendations|similar)$/,
+  /^discover\/(movie|tv)$/,
 ];
-const PASS_PARAMS = ['query', 'page', 'language', 'append_to_response', 'region'];
+const PASS_PARAMS = [
+  'query', 'page', 'language', 'append_to_response', 'region',
+  // discover filters (for suggestions)
+  'sort_by', 'with_original_language', 'with_genres', 'without_genres', 'vote_count.gte', 'vote_average.gte',
+  'primary_release_date.gte', 'primary_release_date.lte', 'first_air_date.gte', 'first_air_date.lte', 'with_origin_country',
+];
 
 module.exports = async function handler(req, res) {
   const token = (process.env.TMDB_TOKEN || '').trim();
@@ -32,7 +39,11 @@ module.exports = async function handler(req, res) {
 
   const params = new URLSearchParams();
   for (const key of PASS_PARAMS) {
-    if (query[key] != null && query[key] !== '') params.set(key, String(query[key]).slice(0, 200));
+    if (query[key] == null || query[key] === '') continue;
+    const value = String(query[key]).slice(0, 200);
+    // discover filters only take simple values: words, numbers, dates, commas and pipes
+    if (key !== 'query' && key !== 'append_to_response' && !/^[\w.,|:-]*$/.test(value)) continue;
+    params.set(key, value);
   }
   params.set('include_adult', 'false');
 
