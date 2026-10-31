@@ -505,6 +505,23 @@ function fromSpokenCaptions(text, c) {
   }
 }
 
+/** "Parasite - Official Trailer (2019) Bong Joon Ho Film" → { title: "Parasite", year: 2019 } */
+const VIDEO_WORDS =
+  /\b(?:official|final|teaser|trailer|trailers|tráiler|avance|预告片?|予告編?|full movie|película completa|clip|scene|review|reseña|reaction|explained|ending explained|recap|breakdown|analysis|behind the scenes|featurette|hd|4k|uhd|imax|in theaters?[^|–-]*|now streaming[^|–-]*|on netflix|netflix|prime video|disney\+?|hbo max|\#\d+)\b/gi;
+function videoTitle(raw) {
+  let t = decode(String(raw || ''));
+  const y = (t.match(/[([]\s*((?:19|20)\d{2})\s*[)\]]/) || [])[1];
+  t = t
+    .replace(/[([][^()\[\]]*[)\]]/g, ' ')
+    .split(/\s+[|｜•·]\s+/)[0]
+    .split(/\s+[-–—:]\s+(?=[^-–—:]*\b(?:official|trailer|teaser|clip|review|explained|recap|tráiler|avance)\b)/i)[0]
+    .replace(VIDEO_WORDS, ' ')
+    .replace(/\s+[-–—|:]\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return { title: t, year: y ? Number(y) : null };
+}
+
 module.exports = {
   Collector,
   decode,
@@ -522,6 +539,7 @@ module.exports = {
   fromSpokenCaptions,
   jsonAfter,
   youtubeId,
+  videoTitle,
   cleanTitle,
   titleBefore,
 };
