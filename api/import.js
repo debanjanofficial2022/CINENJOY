@@ -223,7 +223,7 @@ async function readPage(u, lang) {
   } else {
     x.fromHtml(page.body, c);
   }
-  return { title: info.title || host, kind, lang: (info.lang || 'en').split('-')[0], cands: c.list(kind === 'imdb' ? 200 : 150) };
+  return { title: info.title || host, kind, lang: (info.lang || 'en').split('-')[0], cands: c.list(kind === 'imdb' ? 200 : 150), size: page.body.length };
 }
 
 async function readBody(req) {
@@ -274,7 +274,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (input.debug) {
-      return send(res, 200, { ok: true, debug: true, source: { title: source.title, kind: source.kind, lang: source.lang }, cands: source.cands });
+      return send(res, 200, { ok: true, debug: true, source: { title: source.title, kind: source.kind, lang: source.lang, size: source.size }, cands: source.cands });
     }
     if (!source.cands.length) {
       return send(res, 200, { ok: true, source: { title: source.title, kind: source.kind }, results: [], note: source.note || null });

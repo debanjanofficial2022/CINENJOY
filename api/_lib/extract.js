@@ -133,10 +133,17 @@ class Collector {
       return;
     }
     let t = cleanTitle(raw);
+    // "Vertigo (Alfred Hitchcock, 1958, USA) (208 votes)" → "Vertigo", 1958
+    let noteYear = null;
+    const note = t.match(/^(.{1,90}?)\s*\(([^()]*?\b((?:18|19|20)\d{2})\b[^()]*)\)/);
+    if (note && !/^\s*(?:18|19|20)\d{2}\s*$/.test(note[2])) {
+      t = note[1];
+      noteYear = Number(note[3]);
+    }
     // "Parasite (2019) by Bong Joon Ho" → "Parasite (2019)"
     const mid = t.match(/^(.+?\s*[([]\s*(?:18|19|20)\d{2}\s*[)\]])\s*\S/);
     if (mid) t = mid[1];
-    const y = year || yearOf(t);
+    const y = year || noteYear || yearOf(t);
     t = stripYear(t);
     if (!plausible(t)) return;
     // One entry per title; a second entry only for a different year (Parasite 1982 vs 2019)
@@ -380,7 +387,8 @@ function fromImdb(html, c) {
   const before = c.map.size;
   fromLdJson(html, c);
   const seen = new Set();
-  for (const m of html.matchAll(/\/title\/(tt\d{6,9})\//g)) {
+  for (const m of html.matchAll(/\/title\/(tt\d{6,9})\/|"(tt\d{7,9})"/g)) {
+    m[1] = m[1] || m[2];
     if (seen.has(m[1])) continue;
     seen.add(m[1]);
     if (seen.size > 250) break;
