@@ -11,7 +11,7 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | a | Logo, look, site shell, three site languages | Done |
 | b | Watchlists, sharing, tags, ratings and saving (Supabase) | Done |
 | c | Link import from pages, lists, Reddit and YouTube, or pasted text | Done |
-| d | CineWordle and the Daily Mini crossword | Next |
+| d | CineWordle and the Daily Mini crossword, with daily, practice and challenge links | Done |
 
 ## How it is built
 
@@ -44,12 +44,22 @@ api/tmdb.js             TMDB proxy (Vercel serverless function)
 api/import.js           link import: reads a page, finds titles, matches them on TMDB
 api/_lib/               shared server code: title extraction, safe page fetch, TMDB
 supabase/schema.sql     database tables and security rules (run in the Supabase SQL Editor)
+supabase/games.sql      game results and challenge links (run after schema.sql)
+public/js/games/        CineWordle, Daily Mini crossword, their data and shared game code
 vercel.json             Vercel settings
 ```
 
 ### Database
 
 `supabase/schema.sql` creates the tables (profiles, lists, list members, list items, watched marks, ratings, tags) and their Row Level Security rules. It is safe to run again. Shared lists are joined with an invite code through the `join_list` function.
+
+### Games
+
+- **CineWordle** (`js/games/wordle.js`): guess a 5 or 6 letter title in six tries; one hint per game (year, type, genre or lead actor), marked in the score. The answers are well-known one-word titles from TMDB's top-rated films and series; guesses must be common English words or answers.
+- **Daily Mini** (`js/games/crossword.js`, `crossword-gen.js`): a 5x5 American-style crossword, every square in an across and a down word. Every answer is a real title, clued from its details ("1979 science fiction film directed by Ridley Scott"), or a word from a well-known title, clued as a blank ("The Dark Knight ___", 2012 film). Clues are written in the site language. Check adds 3 seconds per letter, Reveal 15.
+- **Daily** puzzles are the same for everyone on a given local date (#1 is 31 October 2026), built from a seeded shuffle. **Practice** is unlimited. **Challenge links** store the exact puzzle in Supabase so friends play the same one and see each other's scores.
+- Results, streaks and stats are saved to the visitor's account (`game_results`, `challenges`, `challenge_results` in `supabase/games.sql`).
+- **Games data** (`js/games/wordle-data.js`, `crossword-data.js`) was generated once from TMDB top-rated titles (11,600 films and series) and a list of common English words (google-10000-english). Answers are kept in the files so the daily puzzles stay the same for everyone.
 
 ### Link import (no AI)
 
