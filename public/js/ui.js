@@ -160,6 +160,7 @@ export function starInput(value, onChange) {
       );
       b.addEventListener('mouseenter', () => paint(v));
       b.addEventListener('focus', () => paint(v));
+      b.addEventListener('blur', () => paint(current));
       b.addEventListener('click', () => {
         current = current === v ? 0 : v;
         paint(current);

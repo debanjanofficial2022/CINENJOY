@@ -9,16 +9,16 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | Phase 1 step | What | State |
 | --- | --- | --- |
 | a | Logo, look, site shell, three site languages | Done |
-| b | Watchlists and saving (Supabase) | Next |
-| c | Link import | To do |
+| b | Watchlists, sharing, tags, ratings and saving (Supabase) | Done |
+| c | Link import | Next |
 | d | CineWordle and the Daily Mini crossword | To do |
 
 ## How it is built
 
 - **Static site, no build step.** Plain HTML, CSS and JavaScript modules in `public/`. Vercel serves the folder as it is.
 - **Hosting:** Vercel (free Hobby plan). `vercel.json` sets the output folder and sends every page address to `index.html`, so links like `/games` work on refresh.
-- **Saved data (from step b):** Supabase, with anonymous sign-ins, so a visitor's lists and scores are saved from the first visit. Only the public anon key is used in the site. Row Level Security is on for every table.
-- **Secret keys (TMDB):** read only inside Vercel serverless functions in `api/`, from environment variables. They never go in the code.
+- **Saved data:** Supabase, with anonymous sign-ins, so a visitor's lists, ratings, tags and settings are saved from the first visit. Only the public (publishable) key is in the site, in `public/js/config.js`. Row Level Security is on for every table; the rules are in `supabase/schema.sql`. The Supabase JavaScript library loads from jsDelivr, pinned to one version.
+- **Secret keys (TMDB):** `api/tmdb.js` is a Vercel serverless function that reads `TMDB_TOKEN` from the environment and only allows the TMDB paths the site needs. The key never reaches the browser.
 
 ### Files
 
@@ -32,8 +32,18 @@ public/
   js/pages.js           the Home, Watchlist, Games and Lobby pages
   js/store.js           safe browser storage for settings
   icons/, manifest.webmanifest   home-screen icons (installable on phones)
+  js/watchlist.js       lists, one list, search, rating sheet, sharing and joining
+  js/data.js            the visitor's account and all saved data (Supabase)
+  js/tmdb.js            title search and details through /api/tmdb
+  js/ui.js              sheets, toasts, star rating input
+api/tmdb.js             TMDB proxy (Vercel serverless function)
+supabase/schema.sql     database tables and security rules (run in the Supabase SQL Editor)
 vercel.json             Vercel settings
 ```
+
+### Database
+
+`supabase/schema.sql` creates the tables (profiles, lists, list members, list items, watched marks, ratings, tags) and their Row Level Security rules. It is safe to run again. Shared lists are joined with an invite code through the `join_list` function.
 
 ### The logo
 
