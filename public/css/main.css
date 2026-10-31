@@ -1111,3 +1111,29 @@ textarea { resize: vertical; min-height: 64px; }
   .spinner { animation-duration: 2s; }
   .sheet, .sheet-backdrop, .toast, .poster { transition: none; }
 }
+
+/* ---------- Step 1c: link import ---------- */
+
+.import { display: flex; flex-direction: column; gap: 16px; }
+.seg-wide { display: flex; }
+.seg-wide button { flex: 1; }
+input[type='url'] {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(245, 236, 217, 0.2);
+  border-radius: 10px;
+  color: var(--text);
+  font: 400 15px var(--body);
+  padding: 10px 12px;
+}
+.import .fine-print { margin: 0; }
+.import-summary { margin: 0; font-weight: 600; color: var(--cream); }
+.row-start { display: flex; gap: 16px; }
+.picks { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.pick { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; }
+.pick:last-child { border-bottom: 0; }
+.pick:hover { background: rgba(255, 255, 255, 0.03); }
+.pick.is-in { opacity: 0.55; cursor: default; }
+.pick input[type='checkbox'] { width: 20px; height: 20px; accent-color: var(--gold); flex: none; }
+.chip-maybe { display: inline-block; margin: 0 0 0 6px; padding: 1px 7px; font-size: 11px; vertical-align: 2px; border-color: rgba(242, 194, 90, 0.5); color: var(--gold-2); }
+.import-foot { position: sticky; bottom: -22px; display: flex; justify-content: flex-end; padding: 12px 0 4px; background: linear-gradient(180deg, transparent, #150b0d 30%); }
