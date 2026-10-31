@@ -113,7 +113,7 @@ export function suggestionsPage() {
           pool.set(k, prev);
         }
       });
-      for (const c of pool.values()) c.score += (c.seeds.size - 1) * 1.5;
+      for (const c of pool.values()) c.score += Math.min(2, c.seeds.size - 1) * 0.6;
 
       // "Because you loved X": a row per seed, without repeating titles
       const used = new Set();
@@ -133,7 +133,7 @@ export function suggestionsPage() {
         }
       });
       const top = [...pool.values()]
-        .filter((c) => !used.has(keyOf(c.r)))
+        .filter((c) => !used.has(keyOf(c.r)) && (c.r.vote_average || 0) >= 7)
         .sort((a, b) => b.score - a.score)
         .slice(0, 10)
         .map((c) => c.r);

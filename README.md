@@ -13,6 +13,14 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | c | Link import from pages, lists, Reddit and YouTube, or pasted text | Done |
 | d | CineWordle and the Daily Mini crossword, with daily, practice and challenge links | Done |
 
+| Phase 2 step | What | State |
+| --- | --- | --- |
+| a | Lobby: Diary & Stats (with world map); Suggestions | Done |
+| b | Friend rooms and Movie Night | Next |
+| c | CineQuiz and Frame Guess | To do |
+| d | Minute Cryptic and Movie Impostor | To do |
+| e | Instagram and TikTok import | On hold (owner's decision) |
+
 ## How it is built
 
 - **Static site, no build step.** Plain HTML, CSS and JavaScript modules in `public/`. Vercel serves the folder as it is.
@@ -60,6 +68,12 @@ vercel.json             Vercel settings
 - **Daily** puzzles are the same for everyone on a given local date (#1 is 31 October 2026), built from a seeded shuffle. **Practice** is unlimited. **Challenge links** store the exact puzzle in Supabase so friends play the same one and see each other's scores.
 - Results, streaks and stats are saved to the visitor's account (`game_results`, `challenges`, `challenge_results` in `supabase/games.sql`).
 - **Games data** (`js/games/wordle-data.js`, `crossword-data.js`) was generated once from TMDB top-rated titles (11,600 films and series) and a list of common English words (google-10000-english). Answers are kept in the files so the daily puzzles stay the same for everyone.
+
+### Diary & Stats and Suggestions
+
+- **Diary** (`js/diary.js`, `/lobby/diary`): every title you rated or marked watched, by month. Ratings keep the title's details (`supabase/diary.sql`); older ones are filled in from TMDB once.
+- **Stats**: totals, and breakdowns by type, language, country, decade, genre, creator and rating. The world map (`js/worldmap.js`) loads d3-geo, topojson-client, world-atlas and i18n-iso-countries from jsDelivr only when shown.
+- **Suggestions** (`js/suggest.js`, `/watchlist/suggestions`): TMDB recommendations for your favourites (4 stars and up), weighted by the genres, languages and media you rate highly; only titles rated 6.6+ by 300+ people. One daily pick outside your comfort zone: a highly rated title in a language you rarely watch.
 
 ### Link import (no AI)
 
