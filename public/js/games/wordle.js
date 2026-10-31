@@ -14,7 +14,7 @@ import {
 const TRIES = 6;
 const ORDER = shuffle(
   ANSWERS.map((_, i) => i),
-  rng(hashString('cinenjoy-cinewordle-v1')),
+  rng(hashString('cinenjoy-cinewordle-v1962')), // chosen so the first days are well-known titles
 );
 const VALID = new Set([...GUESSES.split(' '), ...ANSWERS.map((a) => a.w)]);
 
