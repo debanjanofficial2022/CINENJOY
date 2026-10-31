@@ -279,3 +279,71 @@ export async function joinList(code) {
   const { sb } = await ready();
   return must(await sb.rpc('join_list', { code }));
 }
+
+// ---------- Live updates ----------
+// Supabase Realtime pushes every insert, update and delete on these tables to the
+// people allowed to see them (Row Level Security still applies). The page calls
+// onChange (bundled, at most a few times a second) and reloads what it shows.
+// Polling every 20 seconds while the page is visible is the safety net in case the
+// live connection drops or a network blocks it.
+
+/**
+ * Keep a page up to date. `scope` is a list id, or null for the visitor's list overview.
+ * Returns a function that stops listening.
+ */
+export function watchLive(scope, onChange) {
+  let stopped = false;
+  let channel = null;
+  let timer = null;
+  let poll = null;
+  const fire = () => {
+    if (stopped) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => !stopped && onChange(), 250);
+  };
+  (async () => {
+    try {
+      const { sb } = await ready();
+      const { data } = await sb.auth.getSession();
+      if (data.session && sb.realtime && sb.realtime.setAuth) sb.realtime.setAuth(data.session.access_token);
+      if (stopped) return;
+      const pg = (table, filter) => ({ event: '*', schema: 'public', table, ...(filter ? { filter } : {}) });
+      channel = sb.channel(`live-${scope || 'lists'}-${Math.random().toString(36).slice(2, 8)}`);
+      if (scope) {
+        channel
+          .on('postgres_changes', pg('list_items', `list_id=eq.${scope}`), fire)
+          .on('postgres_changes', pg('list_members', `list_id=eq.${scope}`), fire)
+          .on('postgres_changes', pg('lists', `id=eq.${scope}`), fire)
+          .on('postgres_changes', pg('watched'), fire)
+          .on('postgres_changes', pg('ratings'), fire);
+      } else {
+        channel
+          .on('postgres_changes', pg('lists'), fire)
+          .on('postgres_changes', pg('list_members'), fire)
+          .on('postgres_changes', pg('list_items'), fire);
+      }
+      channel.subscribe();
+    } catch (err) {
+      console.warn('Live updates unavailable', err);
+    }
+  })();
+  poll = setInterval(() => {
+    if (!stopped && document.visibilityState === 'visible') onChange();
+  }, 20000);
+  const onVisible = () => document.visibilityState === 'visible' && fire();
+  document.addEventListener('visibilitychange', onVisible);
+  return async () => {
+    stopped = true;
+    clearTimeout(timer);
+    clearInterval(poll);
+    document.removeEventListener('visibilitychange', onVisible);
+    if (channel) {
+      try {
+        const sb = await client();
+        await sb.removeChannel(channel);
+      } catch {
+        /* already gone */
+      }
+    }
+  };
+}

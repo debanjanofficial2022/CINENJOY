@@ -1140,3 +1140,15 @@ input[type='url'] {
 
 /* Anything marked hidden stays hidden, whatever its own display style */
 [hidden] { display: none !important; }
+
+/* Live updates: a title a friend just added glows briefly */
+.just-added {
+  animation: just-added 2.4s ease-out;
+}
+@keyframes just-added {
+  0%, 30% { box-shadow: 0 0 0 2px var(--gold), 0 0 22px rgba(242, 194, 90, 0.55); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .just-added { animation: none; outline: 2px solid var(--gold); }
+}

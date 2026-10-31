@@ -348,3 +348,19 @@ grant select, insert, delete on public.watched to authenticated;
 grant select, insert, update, delete on public.ratings to authenticated;
 grant select, insert, update, delete on public.tags to authenticated;
 grant select, insert, update, delete on public.title_tags to authenticated;
+
+-- ---------- Live updates ----------
+-- Lets the site show changes from other people instantly (Supabase Realtime).
+-- Row Level Security still decides who receives each change. Safe to run again.
+do $$
+declare t text;
+begin
+  foreach t in array array['lists', 'list_members', 'list_items', 'watched', 'ratings'] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;

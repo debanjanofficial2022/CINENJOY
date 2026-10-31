@@ -63,6 +63,20 @@ async function askName(force = false) {
 
 // ===================== All my lists =====================
 
+// Live updates for a page: listen while its node is on screen, stop once it is gone.
+function liveWhileShown(node, scope, onChange) {
+  const stop = db.watchLive(scope, () => {
+    if (node.isConnected) onChange();
+  });
+  const check = setInterval(() => {
+    if (!node.isConnected && node.dataset.liveStarted) {
+      clearInterval(check);
+      stop();
+    }
+    if (node.isConnected) node.dataset.liveStarted = '1';
+  }, 1000);
+}
+
 export function listsPage() {
   const node = shell('wl-lists');
   node.append(
@@ -74,9 +88,19 @@ export function listsPage() {
   const body = el('<div class="wl-body"></div>');
   node.append(body);
 
-  async function load() {
-    body.replaceChildren(loadingBox());
+  let lastLists = '';
+  async function load(quiet = false) {
+    if (!quiet) body.replaceChildren(loadingBox());
     try {
+      if (quiet) {
+        const lists = await db.myLists();
+        const sig = JSON.stringify(lists);
+        if (sig !== lastLists && node.isConnected && !node.querySelector('.join-form input:focus')) {
+          lastLists = sig;
+          render(lists);
+        }
+        return;
+      }
       let lists = await track(db.myLists());
       if (!lists.length) {
         const profile = await db.getProfile();
@@ -86,10 +110,11 @@ export function listsPage() {
           lists = await db.myLists();
         }
       }
+      lastLists = JSON.stringify(lists);
       if (node.isConnected) render(lists);
     } catch (err) {
       console.warn(err);
-      body.replaceChildren(errorBox(t('errors.offline'), load));
+      if (!quiet) body.replaceChildren(errorBox(t('errors.offline'), () => load()));
     }
   }
 
@@ -150,6 +175,7 @@ export function listsPage() {
   }
 
   load();
+  liveWhileShown(node, null, () => load(true));
   return node;
 }
 
@@ -174,6 +200,8 @@ export function listPage(listId) {
   node.append(head, searchBox, toolbar, itemsBox);
   head.append(loadingBox());
 
+  let lastSig = '';
+  let liveOn = false;
   async function load(quiet = false) {
     if (!quiet) head.replaceChildren(loadingBox());
     try {
@@ -181,6 +209,25 @@ export function listPage(listId) {
         Promise.all([db.getList(listId), db.myTags(), tmdb.genreNames().catch(() => ({}))]),
       );
       if (!node.isConnected) return;
+      if (quiet && d && data) {
+        const sig = JSON.stringify([d, tg]);
+        if (sig === lastSig) return;
+        lastSig = sig;
+        const before = new Set(data.items.map((i) => i.id));
+        const fresh = d.items.filter((i) => !before.has(i.id) && i.added_by !== d.me);
+        data = d;
+        tags = tg;
+        genres = gn;
+        renderHead();
+        renderToolbar();
+        renderItems();
+        fresh.forEach((i) => {
+          const card = itemsBox.querySelector(`[data-item="${i.id}"]`);
+          if (card) card.classList.add('just-added');
+        });
+        return;
+      }
+      lastSig = d ? JSON.stringify([d, tg]) : '';
       if (!d) {
         head.replaceChildren(errorBox(t('errors.notFound')));
         searchBox.remove();
@@ -196,6 +243,14 @@ export function listPage(listId) {
       if (!quiet) renderSearch();
       renderToolbar();
       renderItems();
+      if (!liveOn) {
+        liveOn = true;
+        liveWhileShown(node, listId, () => {
+          // Wait while a sheet is open so nothing jumps under the visitor; the next
+          // change or the 20-second check catches up once it closes.
+          if (!document.querySelector('.sheet')) load(true);
+        });
+      }
     } catch (err) {
       console.warn(err);
       if (!quiet) head.replaceChildren(errorBox(t('errors.offline'), () => load()));

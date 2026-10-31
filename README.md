@@ -20,6 +20,10 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 - **Saved data:** Supabase, with anonymous sign-ins, so a visitor's lists, ratings, tags and settings are saved from the first visit. Only the public (publishable) key is in the site, in `public/js/config.js`. Row Level Security is on for every table; the rules are in `supabase/schema.sql`. The Supabase JavaScript library loads from jsDelivr, pinned to one version.
 - **Secret keys (TMDB):** `api/tmdb.js` is a Vercel serverless function that reads `TMDB_TOKEN` from the environment and only allows the TMDB paths the site needs. The key never reaches the browser.
 
+### Live updates
+
+Lists update on everyone's screen without refreshing: when a friend adds or removes a title, marks one watched, rates it, joins or renames the list, the change appears within a second, and a title a friend just added glows briefly. This uses Supabase Realtime, which still obeys the Row Level Security rules, so people only receive changes to lists they belong to. The tables are added to Realtime at the end of `supabase/schema.sql`. As a safety net, open list pages also re-check every 20 seconds and whenever the tab comes back into view.
+
 ### Files
 
 ```
