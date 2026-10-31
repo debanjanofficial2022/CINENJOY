@@ -1318,3 +1318,67 @@ a.link-btn { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .tile-w, .w-row.shake { animation: none !important; }
 }
+
+/* =====================================================================
+   Phase 2 step a: Diary & Stats, Suggestions
+   ===================================================================== */
+
+.diary .seg { margin-top: 6px; }
+.empty-col { flex-direction: column; align-items: flex-start; gap: 14px; }
+.diary-month { margin-bottom: 26px; }
+.diary-month h2 { font: 400 26px var(--display); letter-spacing: 0.04em; color: var(--cream); margin: 0 0 8px; }
+:lang(zh-CN) .diary-month h2 { font: 700 19px var(--body); }
+.diary-month h2 span { font: 600 13px var(--body); color: var(--gold); margin-left: 6px; vertical-align: 4px; }
+.diary-row { display: flex; align-items: center; gap: 12px; padding: 8px 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.diary-day { width: 58px; flex: none; font-size: 12.5px; color: var(--muted); text-transform: capitalize; }
+.diary-note { font-size: 13px; color: rgba(245, 236, 217, 0.75); font-style: italic; }
+.diary-row .pc-stars { flex: none; }
+
+.stat-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(46%, 150px), 1fr)); gap: 10px; margin-bottom: 18px; }
+.stat-tile { padding: 14px; border-radius: var(--radius); background: linear-gradient(135deg, rgba(134, 21, 39, 0.5), rgba(92, 14, 27, 0.35)); border: 1px solid var(--line); }
+.stat-tile b { display: block; font: 400 36px var(--display); color: var(--gold-2); line-height: 1; }
+.stat-tile span { font-size: 13px; color: rgba(245, 236, 217, 0.8); }
+.stat-block { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255, 255, 255, 0.02); }
+.stat-block h2 { font: 400 24px var(--display); letter-spacing: 0.04em; color: var(--cream); margin: 0 0 10px; }
+:lang(zh-CN) .stat-block h2 { font: 700 18px var(--body); }
+.stat-block .muted { margin: 8px 0 0; font-size: 13px; }
+.stat-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); margin-top: 14px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 38%) 1fr auto; align-items: center; gap: 8px; padding: 4px 0; font-size: 13.5px; }
+.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { height: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+.bar-fill { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--gold), #ffe3a1); }
+.bar-n { font-variant-numeric: tabular-nums; color: var(--gold-2); font-weight: 700; min-width: 2ch; text-align: right; }
+.more-n { margin-top: 4px !important; }
+.map-block { margin-bottom: 0; }
+.map-slot { min-height: 120px; }
+.world-map { width: 100%; height: auto; display: block; }
+.map-sphere { fill: #120a0c; stroke: rgba(242, 194, 90, 0.15); }
+.map-country { fill: #2a1d20; stroke: #120a0c; stroke-width: 0.5; transition: fill 0.2s; }
+.map-country.on { fill: var(--gold); fill-opacity: var(--k, 1); }
+.map-country:hover { fill: #4a3438; }
+.map-country.on:hover { fill: #ffe3a1; fill-opacity: 1; }
+
+.sug-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  border-radius: var(--radius);
+  color: var(--cream);
+  text-decoration: none;
+  background: linear-gradient(120deg, rgba(242, 194, 90, 0.18), rgba(134, 21, 39, 0.35));
+  border: 1px solid rgba(242, 194, 90, 0.35);
+}
+.sug-banner:hover { border-color: var(--gold); }
+.sug-banner-icon { font-size: 26px; }
+.sug-row { margin-bottom: 26px; }
+.sug-row h2 { font: 400 26px var(--display); letter-spacing: 0.04em; color: var(--cream); margin: 0 0 10px; }
+:lang(zh-CN) .sug-row h2 { font: 700 19px var(--body); }
+.sug-row > .muted { margin: -4px 0 10px; font-size: 14px; }
+.sug-strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(140px, 160px); gap: 14px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+.sug-card { display: flex; flex-direction: column; gap: 3px; scroll-snap-align: start; min-width: 0; }
+.sug-card .btn { margin-top: 6px; align-self: flex-start; }
+.comfort .sug-strip { grid-auto-columns: minmax(160px, 200px); }
+.list-pick { display: flex; flex-direction: column; gap: 8px; }
+.list-pick .list-card { width: 100%; border: 1px solid var(--line); cursor: pointer; font: inherit; text-align: left; }

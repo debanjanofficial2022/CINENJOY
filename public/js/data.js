@@ -231,6 +231,9 @@ export async function saveRating(item, { rating, note, watched_on }) {
           watched_on: watched_on || null,
           title: item.title,
           poster_path: item.poster_path,
+          meta: item.meta || {},
+          original_language: item.original_language || null,
+          release_date: item.release_date || null,
         },
         { onConflict: 'user_id,media_type,tmdb_id' },
       )
@@ -413,4 +416,71 @@ export async function challengeBoard(id) {
   const { sb, uid } = await ready();
   const rows = must(await sb.rpc('challenge_board', { cid: id }));
   return rows.map((r) => ({ ...r, me: r.user_id === uid }));
+}
+
+// ---------- Diary: everything you rated or marked watched ----------
+
+/**
+ * One entry per title you rated or marked watched, newest first:
+ * { key, media_type, tmdb_id, title, original_title, original_language, poster_path,
+ *   release_date, meta, rating, note, date, rated }
+ */
+export async function myDiary() {
+  const { sb, uid } = await ready();
+  const [ratings, watched] = await Promise.all([
+    sb.from('ratings').select('*').eq('user_id', uid).then(must),
+    sb
+      .from('watched')
+      .select('watched_at, list_items(media_type, tmdb_id, title, original_title, original_language, poster_path, release_date, meta)')
+      .eq('user_id', uid)
+      .then(must),
+  ]);
+  const byKey = new Map();
+  for (const w of watched) {
+    const it = w.list_items;
+    if (!it) continue;
+    const key = `${it.media_type}:${it.tmdb_id}`;
+    const prev = byKey.get(key);
+    const date = String(w.watched_at).slice(0, 10);
+    if (!prev || date > prev.date) byKey.set(key, { key, ...it, meta: it.meta || {}, rating: null, note: null, date, rated: false });
+  }
+  for (const r of ratings) {
+    const key = `${r.media_type}:${r.tmdb_id}`;
+    const prev = byKey.get(key) || {};
+    const meta = r.meta && Object.keys(r.meta).length ? r.meta : prev.meta || {};
+    byKey.set(key, {
+      key,
+      media_type: r.media_type,
+      tmdb_id: r.tmdb_id,
+      title: r.title || prev.title || '',
+      original_title: prev.original_title || null,
+      original_language: r.original_language || prev.original_language || null,
+      poster_path: r.poster_path || prev.poster_path || null,
+      release_date: r.release_date || prev.release_date || null,
+      meta,
+      rating: r.rating != null ? Number(r.rating) : null,
+      note: r.note,
+      date: r.watched_on || prev.date || String(r.updated_at || r.created_at).slice(0, 10),
+      rated: true,
+    });
+  }
+  return [...byKey.values()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+
+/** Save title details onto your rating, so stats need no lookup next time. */
+export async function saveRatingMeta(entry) {
+  const { sb, uid } = await ready();
+  await sb
+    .from('ratings')
+    .update({ meta: entry.meta || {}, original_language: entry.original_language || null, release_date: entry.release_date || null })
+    .eq('user_id', uid)
+    .eq('media_type', entry.media_type)
+    .eq('tmdb_id', entry.tmdb_id);
+}
+
+/** Every title in any of your lists: { key → [list ids] } */
+export async function myListedKeys() {
+  const { sb } = await ready();
+  const rows = must(await sb.from('list_items').select('list_id, media_type, tmdb_id, meta, original_language, release_date, title, added_at'));
+  return rows;
 }

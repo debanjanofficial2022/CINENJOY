@@ -35,7 +35,7 @@ const GAMES = [
 
 const LOBBY = [
   { id: 'night', phase: 2, icon: '🍿' },
-  { id: 'diary', phase: 2, icon: '📔' },
+  { id: 'diary', phase: 2, icon: '📔', href: '/lobby/diary' },
   { id: 'explore', phase: 3, icon: '🧭' },
   { id: 'history', phase: 3, icon: '🎞️' },
 ];
@@ -127,15 +127,16 @@ export function lobby() {
     <div class="grid grid-2">
       ${LOBBY.map((tab, i) => {
         const [name, desc] = t(`lobby.tabs.${tab.id}`);
+        const tag = tab.href ? 'a' : 'article';
         return `
-        <article class="ticket ticket-static">
+        <${tag} class="ticket${tab.href ? ' is-next' : ' ticket-static'}"${tab.href ? ` href="${tab.href}" data-link` : ''}>
           <span class="ticket-main">
             ${statusChip(tab)}
             <span class="ticket-title"><span class="emoji" aria-hidden="true">${tab.icon}</span> ${esc(name)}</span>
             <span class="ticket-desc">${esc(desc)}</span>
           </span>
           <span class="ticket-stub" aria-hidden="true"><span>Nº ${stubNo(i + 1)}</span></span>
-        </article>`;
+        </${tag}>`;
       }).join('')}
     </div>`,
   );

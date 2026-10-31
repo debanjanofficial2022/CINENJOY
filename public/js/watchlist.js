@@ -147,6 +147,11 @@ export function listsPage() {
           <button class="btn btn-ghost" type="submit">${esc(t('wl.joinBtn'))}</button>
         </form>
       </div>
+      <a class="sug-banner" href="/watchlist/suggestions" data-link>
+        <span class="sug-banner-icon" aria-hidden="true">✨</span>
+        <span class="list-text"><span class="list-name">${esc(t('sug.title'))}</span><span class="list-meta">${esc(t('sug.banner'))}</span></span>
+        <span class="list-go" aria-hidden="true">›</span>
+      </a>
       <div class="list-cards">${cards}</div>
       <p class="fine-print"><span class="dot" aria-hidden="true">●</span> ${esc(t('wl.savedNote'))}</p>`),
     );
