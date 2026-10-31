@@ -144,43 +144,91 @@ async function matchAll(cands, pageLang) {
 
 // ---------- Readers per site ----------
 
+// YouTube often refuses servers. Try, in order: the watch page (title,
+// description, captions); the YouTube Data API if YOUTUBE_API_KEY is set
+// (title and description); YouTube's public oEmbed (title only).
 async function readYoutube(id, lang) {
-  const page = await fetchPage(`https://www.youtube.com/watch?v=${id}&hl=en`, {
-    cookie: 'CONSENT=YES+cb.20240101-00-p0.en+FX+000; SOCS=CAI',
-    lang,
-  });
-  const player = x.jsonAfter(page.body, 'ytInitialPlayerResponse = ') || x.jsonAfter(page.body, 'ytInitialPlayerResponse=');
-  if (!player || !player.videoDetails) throw new ImportError('blocked');
-  const vd = player.videoDetails;
   const c = new x.Collector();
-  x.fromText(`${vd.title || ''}\n${vd.shortDescription || ''}`, c, { lines: true });
-
-  let captions = 'none';
-  let pageLang = 'en';
-  const tracks =
-    (player.captions && player.captions.playerCaptionsTracklistRenderer && player.captions.playerCaptionsTracklistRenderer.captionTracks) || [];
-  const manual = tracks.filter((t) => t.kind !== 'asr');
-  const pick =
-    manual.find((t) => /^en/.test(t.languageCode)) || manual[0] || tracks.find((t) => t.kind === 'asr') || null;
-  if (pick && pick.baseUrl) {
-    pageLang = (pick.languageCode || 'en').split('-')[0];
-    try {
-      const cap = await fetchPage(`${pick.baseUrl}&fmt=json3`, { accept: 'application/json', lang });
-      const json = JSON.parse(cap.body);
-      const text = (json.events || [])
-        .map((e) => (e.segs || []).map((s) => s.utf8 || '').join(''))
-        .join('\n')
-        .replace(/\[[^\]]*\]/g, ' ');
-      if (text.trim()) {
-        if (pick.kind === 'asr') x.fromSpokenCaptions(text.replace(/\n/g, ' '), c);
-        else x.fromText(text, c, { lines: true });
-        captions = pick.kind === 'asr' ? 'auto' : 'manual';
+  let page = null;
+  try {
+    page = await fetchPage(`https://www.youtube.com/watch?v=${id}&hl=en`, {
+      cookie: 'CONSENT=YES+cb.20240101-00-p0.en+FX+000; SOCS=CAI',
+      lang,
+    });
+  } catch {
+    page = null;
+  }
+  const player = page && (x.jsonAfter(page.body, 'ytInitialPlayerResponse = ') || x.jsonAfter(page.body, 'ytInitialPlayerResponse='));
+  if (player && player.videoDetails) {
+    const vd = player.videoDetails;
+    x.fromText(`${vd.title || ''}\n${vd.shortDescription || ''}`, c, { lines: true });
+    let captions = 'none';
+    let pageLang = 'en';
+    const tracks =
+      (player.captions && player.captions.playerCaptionsTracklistRenderer && player.captions.playerCaptionsTracklistRenderer.captionTracks) || [];
+    const manual = tracks.filter((t) => t.kind !== 'asr');
+    const pick = manual.find((t) => /^en/.test(t.languageCode)) || manual[0] || tracks.find((t) => t.kind === 'asr') || null;
+    if (pick && pick.baseUrl) {
+      pageLang = (pick.languageCode || 'en').split('-')[0];
+      try {
+        const cap = await fetchPage(`${pick.baseUrl}&fmt=json3`, { accept: 'application/json', lang });
+        const json = JSON.parse(cap.body);
+        const text = (json.events || [])
+          .map((e) => (e.segs || []).map((seg) => seg.utf8 || '').join(''))
+          .join('\n')
+          .replace(/\[[^\]]*\]/g, ' ');
+        if (text.trim()) {
+          if (pick.kind === 'asr') x.fromSpokenCaptions(text.replace(/\n/g, ' '), c);
+          else x.fromText(text, c, { lines: true });
+          captions = pick.kind;
+        }
+      } catch {
+        captions = 'none';
       }
-    } catch {
-      captions = 'none';
+    }
+    return { title: vd.title || 'YouTube', kind: 'youtube', lang: pageLang, cands: c.list(), note: captions === 'none' ? 'no_captions' : null };
+  }
+
+  // The page's own description tags, when the full data was withheld
+  if (page) {
+    const info = x.pageInfo(page.body);
+    const desc = x.decode(((page.body.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i) || [])[1]) || '');
+    if (info.title && !/^youtube$/i.test(info.title.trim())) {
+      x.fromText(`${info.title}\n${desc}`, c, { lines: true });
+      return { title: info.title, kind: 'youtube', lang: 'en', cands: c.list(), note: 'no_captions' };
     }
   }
-  return { title: vd.title || 'YouTube', kind: 'youtube', lang: pageLang, cands: c.list(), note: captions === 'none' ? 'no_captions' : null };
+
+  const key = (process.env.YOUTUBE_API_KEY || '').trim();
+  if (key) {
+    try {
+      const api = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(id)}&key=${encodeURIComponent(key)}`,
+        { signal: AbortSignal.timeout(8000) },
+      );
+      const j = await api.json();
+      const sn = j.items && j.items[0] && j.items[0].snippet;
+      if (sn) {
+        x.fromText(`${sn.title || ''}\n${sn.description || ''}`, c, { lines: true });
+        return { title: sn.title || 'YouTube', kind: 'youtube', lang: (sn.defaultAudioLanguage || 'en').split('-')[0], cands: c.list(), note: 'no_captions' };
+      }
+    } catch {
+      /* fall through to oEmbed */
+    }
+  }
+
+  try {
+    const o = await fetchPage(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`, {
+      accept: 'application/json',
+      lang,
+    });
+    const j = JSON.parse(o.body);
+    x.fromText(j.title || '', c, { lines: true });
+    return { title: j.title || 'YouTube', kind: 'youtube', lang: 'en', cands: c.list(), note: 'title_only' };
+  } catch (err) {
+    if (err instanceof ImportError && err.code === 'not_found') throw err;
+    throw new ImportError('blocked');
+  }
 }
 
 async function readReddit(u, lang) {
@@ -223,7 +271,10 @@ async function readPage(u, lang) {
   } else {
     x.fromHtml(page.body, c);
   }
-  return { title: info.title || host, kind, lang: (info.lang || 'en').split('-')[0], cands: c.list(kind === 'imdb' ? 200 : 150), size: page.body.length };
+  const cands = c.list(kind === 'imdb' ? 200 : 150);
+  // A tiny page with nothing in it is a "are you a robot?" check
+  if (!cands.length && page.body.length < 8000) throw new ImportError('blocked');
+  return { title: info.title || host, kind, lang: (info.lang || 'en').split('-')[0], cands, size: page.body.length };
 }
 
 async function readBody(req) {

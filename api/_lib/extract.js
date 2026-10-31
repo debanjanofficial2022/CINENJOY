@@ -413,7 +413,7 @@ function fromMal(html, c) {
   }
   let found = 0;
   for (const m of html.matchAll(/<h3[^>]*class="[^"]*(?:anime_ranking_h3|title)[^"]*"[^>]*>([\s\S]*?)<\/h3>/gi)) {
-    c.add(stripTags(m[1]), { strength: 3, hint: 'anime' });
+    c.add(stripTags(m[1]), { strength: 4, hint: 'anime' });
     found += 1;
   }
   return found;

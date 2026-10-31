@@ -128,6 +128,7 @@ const dict = {
       notes: {
         no_captions: 'This video has no captions CINENJOY could read, so only its title and description were checked.',
         partial: 'The page was very long, so some titles may be missing.',
+        title_only: 'YouTube only shared this video’s title. If titles are in its description, copy the description and paste it here.',
       },
     },
     rating: { label: 'Rating', stars: '{n} stars' },
@@ -262,6 +263,7 @@ const dict = {
       notes: {
         no_captions: '这个视频没有可读取的字幕，所以只检查了标题和简介。',
         partial: '页面很长，可能有部分作品没有找到。',
+        title_only: 'YouTube 只提供了这个视频的标题。如果片名在简介里，请复制简介并粘贴到这里。',
       },
     },
     rating: { label: '评分', stars: '{n} 星' },
@@ -396,6 +398,7 @@ const dict = {
       notes: {
         no_captions: 'Este vídeo no tiene subtítulos legibles, así que solo se revisaron su título y descripción.',
         partial: 'La página era muy larga, así que pueden faltar algunos títulos.',
+        title_only: 'YouTube solo compartió el título de este vídeo. Si los títulos están en la descripción, cópiala y pégala aquí.',
       },
     },
     rating: { label: 'Puntuación', stars: '{n} estrellas' },
