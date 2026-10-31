@@ -144,6 +144,11 @@ async function matchAll(cands, pageLang) {
 
 // ---------- Readers per site ----------
 
+function addVideoTitle(c, raw) {
+  const v = x.videoTitle(raw);
+  if (v.title) c.add(v.title, { strength: 2, year: v.year });
+}
+
 // YouTube often refuses servers. Try, in order: the watch page (title,
 // description, captions); the YouTube Data API if YOUTUBE_API_KEY is set
 // (title and description); YouTube's public oEmbed (title only).
@@ -161,6 +166,7 @@ async function readYoutube(id, lang) {
   const player = page && (x.jsonAfter(page.body, 'ytInitialPlayerResponse = ') || x.jsonAfter(page.body, 'ytInitialPlayerResponse='));
   if (player && player.videoDetails) {
     const vd = player.videoDetails;
+    addVideoTitle(c, vd.title);
     x.fromText(`${vd.title || ''}\n${vd.shortDescription || ''}`, c, { lines: true });
     let captions = 'none';
     let pageLang = 'en';
@@ -195,6 +201,7 @@ async function readYoutube(id, lang) {
     const desc = x.decode(((page.body.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i) || [])[1]) || '');
     const vtitle = (info.title || '').replace(/\s*-\s*YouTube\s*$/i, '').trim();
     if (vtitle && !/^youtube$/i.test(vtitle)) {
+      addVideoTitle(c, vtitle);
       x.fromText(`${vtitle}\n${desc}`, c, { lines: true });
       return { title: vtitle, kind: 'youtube', lang: 'en', cands: c.list(), note: 'no_captions' };
     }
@@ -210,6 +217,7 @@ async function readYoutube(id, lang) {
       const j = await api.json();
       const sn = j.items && j.items[0] && j.items[0].snippet;
       if (sn) {
+        addVideoTitle(c, sn.title);
         x.fromText(`${sn.title || ''}\n${sn.description || ''}`, c, { lines: true });
         return { title: sn.title || 'YouTube', kind: 'youtube', lang: (sn.defaultAudioLanguage || 'en').split('-')[0], cands: c.list(), note: 'no_captions' };
       }
@@ -224,6 +232,7 @@ async function readYoutube(id, lang) {
       lang,
     });
     const j = JSON.parse(o.body);
+    addVideoTitle(c, j.title);
     x.fromText(j.title || '', c, { lines: true });
     return { title: j.title || 'YouTube', kind: 'youtube', lang: 'en', cands: c.list(), note: 'title_only' };
   } catch (err) {
