@@ -19,8 +19,8 @@ function section(cls, inner) {
 }
 
 const GAMES = [
-  { id: 'cinewordle', modes: ['daily', 'practice', 'challenge'], phase: 1, step: 4 },
-  { id: 'crossword', modes: ['daily', 'practice', 'room', 'challenge'], phase: 1, step: 4 },
+  { id: 'cinewordle', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/cinewordle' },
+  { id: 'crossword', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/crossword' },
   { id: 'cryptic', modes: ['daily', 'challenge'], phase: 2 },
   { id: 'quiz', modes: ['practice', 'room', 'challenge'], phase: 2 },
   { id: 'frame', modes: ['daily', 'practice', 'challenge'], phase: 2 },
@@ -40,8 +40,10 @@ const LOBBY = [
   { id: 'history', phase: 3, icon: '🎞️' },
 ];
 
-const statusChip = ({ phase, step }) =>
-  step
+const statusChip = ({ phase, step, href }) =>
+  href
+    ? `<span class="chip chip-next">▶ ${esc(t('games.playNow'))}</span>`
+    : step
     ? `<span class="chip chip-next">${esc(t('status.next'))} · ${esc(t('status.step', { n: step }))}</span>`
     : `<span class="chip">${esc(t('status.phase', { n: phase }))}</span>`;
 
@@ -98,8 +100,9 @@ export function games() {
     <div class="grid">
       ${GAMES.map((g, i) => {
         const [name, desc] = t(`games.list.${g.id}`);
+        const tag = g.href ? 'a' : 'article';
         return `
-        <article class="ticket ticket-static${g.step ? ' is-next' : ''}">
+        <${tag} class="ticket${g.href ? ' is-next' : ' ticket-static'}"${g.href ? ` href="${g.href}" data-link` : ''}>
           <span class="ticket-main">
             ${statusChip(g)}
             <span class="ticket-title">${esc(name)}</span>
@@ -107,7 +110,7 @@ export function games() {
             <span class="modes">${g.modes.map((m) => `<span>${esc(t(`modes.${m}`))}</span>`).join('')}</span>
           </span>
           <span class="ticket-stub" aria-hidden="true"><span>Nº ${stubNo(i + 1)}</span></span>
-        </article>`;
+        </${tag}>`;
       }).join('')}
     </div>`,
   );

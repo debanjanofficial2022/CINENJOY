@@ -279,3 +279,70 @@ export async function joinList(code) {
   const { sb } = await ready();
   return must(await sb.rpc('join_list', { code }));
 }
+
+// ---------- Games: results, streaks, challenge links ----------
+
+export async function saveResult({ game, mode, puzzleKey, won, score, hintUsed = false, detail = {} }) {
+  const { sb, uid } = await ready();
+  const row = {
+    user_id: uid,
+    game,
+    mode,
+    puzzle_key: String(puzzleKey).slice(0, 80),
+    won,
+    score: score ?? null,
+    hint_used: hintUsed,
+    detail,
+  };
+  const { data, error } = await sb.from('game_results').insert(row).select().single();
+  // A daily result already saved (another tab or device) is fine
+  if (error && error.code !== '23505') throw error;
+  return data || null;
+}
+
+export async function myResults(game, limit = 400) {
+  const { sb } = await ready();
+  return must(
+    await sb
+      .from('game_results')
+      .select('mode, puzzle_key, won, score, hint_used, detail, created_at')
+      .eq('game', game)
+      .order('created_at', { ascending: false })
+      .limit(limit),
+  );
+}
+
+export async function createChallenge(game, puzzle, result) {
+  const { sb, uid } = await ready();
+  const ch = must(await sb.from('challenges').insert({ game, puzzle, created_by: uid }).select('id').single());
+  if (result) {
+    await sb.from('challenge_results').insert({
+      challenge_id: ch.id,
+      user_id: uid,
+      won: result.won,
+      score: result.score ?? null,
+      hint_used: Boolean(result.hintUsed),
+    });
+  }
+  return ch.id;
+}
+
+export async function getChallenge(id) {
+  const { sb } = await ready();
+  const rows = must(await sb.rpc('get_challenge', { cid: id }));
+  return rows && rows[0] ? rows[0] : null;
+}
+
+export async function saveChallengeResult(id, { won, score, hintUsed }) {
+  const { sb, uid } = await ready();
+  const { error } = await sb
+    .from('challenge_results')
+    .insert({ challenge_id: id, user_id: uid, won, score: score ?? null, hint_used: Boolean(hintUsed) });
+  if (error && error.code !== '23505') throw error;
+}
+
+export async function challengeBoard(id) {
+  const { sb, uid } = await ready();
+  const rows = must(await sb.rpc('challenge_board', { cid: id }));
+  return rows.map((r) => ({ ...r, me: r.user_id === uid }));
+}
