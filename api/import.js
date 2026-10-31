@@ -193,9 +193,10 @@ async function readYoutube(id, lang) {
   if (page) {
     const info = x.pageInfo(page.body);
     const desc = x.decode(((page.body.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i) || [])[1]) || '');
-    if (info.title && !/^youtube$/i.test(info.title.trim())) {
-      x.fromText(`${info.title}\n${desc}`, c, { lines: true });
-      return { title: info.title, kind: 'youtube', lang: 'en', cands: c.list(), note: 'no_captions' };
+    const vtitle = (info.title || '').replace(/\s*-\s*YouTube\s*$/i, '').trim();
+    if (vtitle && !/^youtube$/i.test(vtitle)) {
+      x.fromText(`${vtitle}\n${desc}`, c, { lines: true });
+      return { title: vtitle, kind: 'youtube', lang: 'en', cands: c.list(), note: 'no_captions' };
     }
   }
 
