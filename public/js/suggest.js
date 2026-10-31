@@ -119,9 +119,13 @@ export function suggestionsPage() {
       const used = new Set();
       const rows = [];
       seeds.slice(0, 4).forEach((s, i) => {
+        // Closest to this favourite first: same language, shared genres
+        const genres = new Set((s.meta && s.meta.genres) || []);
+        const near = (r) =>
+          (r.original_language === s.original_language ? 1.5 : 0) + (r.genre_ids || []).filter((g) => genres.has(g)).length * 0.6;
         const picks = [...pool.values()]
           .filter((c) => c.seeds.has(i) && !used.has(keyOf(c.r)))
-          .sort((a, b) => b.score - a.score)
+          .sort((a, b) => b.score + near(b.r) - (a.score + near(a.r)))
           .slice(0, 8);
         if (picks.length >= 3) {
           picks.forEach((c) => used.add(keyOf(c.r)));
