@@ -268,6 +268,7 @@ export function listPage(listId) {
         <h1><span aria-hidden="true">${esc(list.emoji || '🎞️')}</span> ${esc(list.name)}</h1>
         <div class="wl-buttons">
           <button class="btn" type="button" data-share>${esc(t('wl.share'))}</button>
+          <button class="btn btn-ghost" type="button" data-import>${esc(t('imp.button'))}</button>
           ${data.isOwner ? `<button class="btn btn-ghost" type="button" data-rename>${esc(t('wl.rename'))}</button>` : ''}
           ${
             data.isOwner
@@ -285,6 +286,7 @@ export function listPage(listId) {
       }`),
     );
     head.querySelector('[data-share]').addEventListener('click', openShare);
+    head.querySelector('[data-import]').addEventListener('click', openImport);
     const rename = head.querySelector('[data-rename]');
     if (rename)
       rename.addEventListener('click', async () => {
@@ -374,6 +376,194 @@ export function listPage(listId) {
       console.warn(err);
       toast(t('errors.generic'), 'error');
     }
+  }
+
+  // ---------- import from a link or pasted text ----------
+
+  function openImport() {
+    let mode = 'link';
+    let found = [];
+    const box = el(`
+      <div class="import">
+        <div class="seg seg-wide" role="group">
+          <button type="button" data-mode="link" aria-pressed="true">${esc(t('imp.fromLink'))}</button>
+          <button type="button" data-mode="text" aria-pressed="false">${esc(t('imp.fromText'))}</button>
+        </div>
+        <form class="form" data-form>
+          <label class="field" data-link-field><span>${esc(t('imp.linkLabel'))}</span>
+            <input type="url" inputmode="url" autocomplete="off" placeholder="${esc(t('imp.linkPlaceholder'))}" /></label>
+          <label class="field" data-text-field hidden><span>${esc(t('imp.textLabel'))}</span>
+            <textarea rows="6" maxlength="20000" placeholder="${esc(t('imp.textPlaceholder'))}"></textarea></label>
+          <p class="fine-print">${esc(t('imp.hint'))}</p>
+          <div class="row-end"><button class="btn" type="submit">${esc(t('imp.find'))}</button></div>
+        </form>
+        <div data-status aria-live="polite"></div>
+        <div data-results></div>
+      </div>`);
+    const form = box.querySelector('[data-form]');
+    const status = box.querySelector('[data-status]');
+    const resultsBox = box.querySelector('[data-results]');
+    const urlInput = box.querySelector('input[type=url]');
+    const textInput = box.querySelector('textarea');
+
+    const setMode = (m) => {
+      mode = m;
+      box.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+      box.querySelector('[data-link-field]').hidden = m !== 'link';
+      box.querySelector('[data-text-field]').hidden = m !== 'text';
+      (m === 'link' ? urlInput : textInput).focus();
+    };
+    box.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+    const close = openSheet({ title: t('imp.title'), body: box });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = { lang: getLang() };
+      if (mode === 'link') {
+        let u = urlInput.value.trim();
+        if (!u) return;
+        if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+        payload.url = u;
+      } else {
+        const txt = textInput.value.trim();
+        if (!txt) return;
+        payload.text = txt;
+      }
+      const btn = form.querySelector('button[type=submit]');
+      btn.disabled = true;
+      resultsBox.replaceChildren();
+      status.replaceChildren(loadingBoxWith(t('imp.reading')));
+      try {
+        const res = await track(
+          fetch('/api/import', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          }).then((r) => r.json()),
+        );
+        if (!res.ok) {
+          const msg = t(`imp.errors.${res.error}`);
+          showError(msg.startsWith('imp.') ? t('errors.generic') : msg, res.error === 'blocked');
+          return;
+        }
+        found = res.results || [];
+        renderFound(res);
+      } catch (err) {
+        console.warn(err);
+        showError(t('errors.generic'));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function loadingBoxWith(text) {
+      return el(`<div class="loading-box" role="status"><span class="spinner" aria-hidden="true"></span>${esc(text)}</div>`);
+    }
+
+    function showError(msg, offerText = false) {
+      const err = el(`<div class="error-box" role="alert"><p>${esc(msg)}</p></div>`);
+      if (offerText) {
+        const b = el(`<button class="btn btn-ghost" type="button">${esc(t('imp.switchToText'))}</button>`);
+        b.addEventListener('click', () => {
+          status.replaceChildren();
+          setMode('text');
+        });
+        err.append(b);
+      }
+      status.replaceChildren(err);
+    }
+
+    function renderFound(res) {
+      status.replaceChildren();
+      if (!found.length) {
+        showError(res.note === 'no_captions' ? `${t('imp.notes.no_captions')} ${t('imp.none')}` : t('imp.none'), mode === 'link');
+        return;
+      }
+      const have = new Set(data.items.map((i) => `${i.media_type}:${i.tmdb_id}`));
+      const summary =
+        res.source && res.source.title
+          ? t('imp.found', { n: found.length, source: res.source.title })
+          : t('imp.foundText', { n: found.length });
+      const rows = found
+        .map((r, i) => {
+          const inList = have.has(`${r.media_type}:${r.tmdb_id}`);
+          const img = tmdb.poster(r.poster_path, 'w92');
+          const orig = r.original_title && r.original_title !== r.title ? r.original_title : '';
+          const meta = [tmdb.yearOf(r), t(`medium.${tmdb.mediumOf(r)}`)].filter(Boolean).join(' · ');
+          return `<label class="pick${inList ? ' is-in' : ''}">
+            <input type="checkbox" data-i="${i}" ${inList ? 'disabled' : r.confidence === 'high' ? 'checked' : ''} />
+            <span class="thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy" />` : ''}</span>
+            <span class="result-text">
+              <span class="result-title">${esc(r.title)}${r.confidence === 'maybe' ? ` <span class="chip chip-maybe">${esc(t('imp.maybe'))}</span>` : ''}</span>
+              ${orig ? `<span class="result-orig" lang="${esc(r.original_language)}">${esc(orig)}</span>` : ''}
+              <span class="result-meta">${esc(meta)}</span>
+              ${inList ? `<span class="result-meta">${esc(t('imp.inList'))}</span>` : ''}
+              ${r.confidence === 'maybe' && r.found ? `<span class="result-meta">${esc(t('imp.foundAs', { t: r.found }))}</span>` : ''}
+            </span>
+          </label>`;
+        })
+        .join('');
+      const note = res.note && t(`imp.notes.${res.note}`).startsWith('imp.') === false ? `<p class="fine-print">${esc(t(`imp.notes.${res.note}`))}</p>` : '';
+      resultsBox.replaceChildren(
+        frag(`
+        <p class="import-summary">${esc(summary)}</p>
+        ${note}
+        <div class="row-start">
+          <button type="button" class="link-btn" data-all>${esc(t('imp.selectAll'))}</button>
+          <button type="button" class="link-btn" data-none>${esc(t('imp.selectNone'))}</button>
+        </div>
+        <div class="picks">${rows}</div>
+        <div class="import-foot"><button class="btn" type="button" data-add></button></div>`),
+      );
+      const boxes = [...resultsBox.querySelectorAll('input[type=checkbox]')];
+      const addBtn = resultsBox.querySelector('[data-add]');
+      const update = () => {
+        const n = boxes.filter((b) => b.checked).length;
+        addBtn.textContent = n === 1 ? t('imp.addOne') : t('imp.add', { n });
+        addBtn.disabled = n === 0;
+      };
+      boxes.forEach((b) => b.addEventListener('change', update));
+      resultsBox.querySelector('[data-all]').addEventListener('click', () => {
+        boxes.forEach((b) => {
+          if (!b.disabled) b.checked = true;
+        });
+        update();
+      });
+      resultsBox.querySelector('[data-none]').addEventListener('click', () => {
+        boxes.forEach((b) => (b.checked = false));
+        update();
+      });
+      update();
+
+      addBtn.addEventListener('click', async () => {
+        const chosen = boxes.filter((b) => b.checked).map((b) => found[Number(b.dataset.i)]);
+        if (!chosen.length) return;
+        addBtn.disabled = true;
+        boxes.forEach((b) => (b.disabled = true));
+        let done = 0;
+        await track(
+          (async () => {
+            for (const r of chosen) {
+              addBtn.textContent = t('imp.adding', { i: done + 1, n: chosen.length });
+              try {
+                const full = await tmdb.details(r.media_type, r.tmdb_id);
+                await db.addItem(data.list.id, full);
+                done += 1;
+              } catch (err) {
+                if (err && err.code === '23505') done += 1;
+                else console.warn(err);
+              }
+            }
+          })(),
+        );
+        toast(t('imp.added', { n: done }));
+        close();
+        refresh();
+      });
+    }
+
+    setTimeout(() => urlInput.focus(), 60);
   }
 
   // ---------- search and add ----------

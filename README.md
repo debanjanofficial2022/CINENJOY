@@ -10,8 +10,8 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | --- | --- | --- |
 | a | Logo, look, site shell, three site languages | Done |
 | b | Watchlists, sharing, tags, ratings and saving (Supabase) | Done |
-| c | Link import | Next |
-| d | CineWordle and the Daily Mini crossword | To do |
+| c | Link import from pages, lists, Reddit and YouTube, or pasted text | Done |
+| d | CineWordle and the Daily Mini crossword | Next |
 
 ## How it is built
 
@@ -37,6 +37,8 @@ public/
   js/tmdb.js            title search and details through /api/tmdb
   js/ui.js              sheets, toasts, star rating input
 api/tmdb.js             TMDB proxy (Vercel serverless function)
+api/import.js           link import: reads a page, finds titles, matches them on TMDB
+api/_lib/               shared server code: title extraction, safe page fetch, TMDB
 supabase/schema.sql     database tables and security rules (run in the Supabase SQL Editor)
 vercel.json             Vercel settings
 ```
@@ -44,6 +46,14 @@ vercel.json             Vercel settings
 ### Database
 
 `supabase/schema.sql` creates the tables (profiles, lists, list members, list items, watched marks, ratings, tags) and their Row Level Security rules. It is safe to run again. Shared lists are joined with an invite code through the `join_list` function.
+
+### Link import (no AI)
+
+`api/import.js` reads a page on the server and looks for titles the way a person would: "Title (1999)", 《片名》, «título», italics, headings, list items, table rows with a year, numbered and timestamped lines. Letterboxd, IMDb and MyAnimeList lists are read from their own markup (IMDb by IMDb id). Each candidate is checked against TMDB; exact matches (helped by the year) are ticked, unsure ones are marked, and nothing is saved until the visitor chooses.
+
+- Pages are fetched safely: public http(s) only, private and internal addresses refused on every redirect, 3 MB and 9-second limits.
+- Some sites refuse servers (Letterboxd, IMDb, Reddit, often YouTube). The visitor is then offered "Paste text" instead.
+- YouTube: title, description and captions when YouTube allows; otherwise the page's own description tags, or the title alone. Setting an optional `YOUTUBE_API_KEY` (YouTube Data API v3, free) in Vercel lets it read every video's description.
 
 ### The logo
 
