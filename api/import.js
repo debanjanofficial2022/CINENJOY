@@ -16,8 +16,10 @@ function searchLang(title, pageLang) {
   if (/[぀-ヿ]/.test(title)) return 'ja-JP';
   if (/[가-힯]/.test(title)) return 'ko-KR';
   if (/[㐀-鿿]/.test(title)) return pageLang === 'ja' ? 'ja-JP' : 'zh-CN';
-  const base = String(pageLang || 'en').toLowerCase();
-  return SEARCH_LANG[base] || SEARCH_LANG[base.split('-')[0]] || 'en-US';
+  // A Latin-script title on a Chinese, Japanese or Korean page is usually the English one
+  const base = String(pageLang || 'en').toLowerCase().split('-')[0];
+  if (['zh', 'ja', 'ko', 'th', 'ru', 'hi'].includes(base)) return 'en-US';
+  return SEARCH_LANG[base] || 'en-US';
 }
 
 function shape(r, mediaType) {
@@ -46,6 +48,7 @@ function scoreResult(c, r) {
 
   const y = Number(String(r.release_date || r.first_air_date || '').slice(0, 4)) || null;
   if (c.year && y) s += Math.abs(y - c.year) <= 1 ? 0.25 : -0.6;
+  else if (c.year && !y) s -= 0.1;
   if (c.hint === 'anime') s += r.original_language === 'ja' && (r.genre_ids || []).includes(16) ? 0.15 : -0.3;
   if ((c.hint === 'movie' || c.hint === 'tv') && r.media_type === c.hint) s += 0.05;
   const votes = r.vote_count || 0;
@@ -66,12 +69,29 @@ async function matchOne(c, pageLang) {
     if (t) return { result: shape(t, 'tv'), score: 2 };
     return null;
   }
-  const d = await tmdb('search/multi', { query: c.title, language: searchLang(c.title, pageLang), page: 1 });
-  const results = (d.results || []).filter((r) => r.media_type === 'movie' || r.media_type === 'tv').slice(0, 10);
-  let best = null;
-  for (const r of results) {
-    const s = scoreResult(c, r);
-    if (s > 0 && (!best || s > best.score)) best = { result: shape(r), score: s };
+  const lang = searchLang(c.title, pageLang);
+  const search = async (language) => {
+    const d = await tmdb('search/multi', { query: c.title, language, page: 1 });
+    return (d.results || []).filter((r) => r.media_type === 'movie' || r.media_type === 'tv').slice(0, 10);
+  };
+  const pick = (list) => {
+    let top = null;
+    for (const r of list) {
+      const s = scoreResult(c, r);
+      if (s > 0 && (!top || s > top.score)) top = { result: shape(r), score: s };
+    }
+    return top;
+  };
+  let results = await search(lang);
+  let best = pick(results);
+  // An English title on a Spanish page: "Spirited Away" is "El viaje de Chihiro" in Spanish
+  if ((!best || best.score < 0.95) && lang !== 'en-US' && !x.hasCJK(c.title)) {
+    const en = await search('en-US');
+    const alt = pick(en);
+    if (alt && (!best || alt.score > best.score)) {
+      best = alt;
+      results = en;
+    }
   }
   // Site lists (MyAnimeList romaji, Letterboxd) are titles for sure: if no name
   // matches exactly, trust the search's own first result when it fits.
