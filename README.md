@@ -16,8 +16,8 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | Phase 2 step | What | State |
 | --- | --- | --- |
 | a | Lobby: Diary & Stats (with world map); Suggestions | Done |
-| b | Friend rooms and Movie Night | Next |
-| c | CineQuiz and Frame Guess | To do |
+| b | Friend rooms and Movie Night | Done |
+| c | CineQuiz and Frame Guess | Next |
 | d | Minute Cryptic and Movie Impostor | To do |
 | e | Instagram and TikTok import | On hold (owner's decision) |
 
@@ -53,6 +53,8 @@ api/import.js           link import: reads a page, finds titles, matches them on
 api/_lib/               shared server code: title extraction, safe page fetch, TMDB
 supabase/schema.sql     database tables and security rules (run in the Supabase SQL Editor)
 supabase/games.sql      game results and challenge links (run after schema.sql)
+supabase/diary.sql      title details kept on ratings, for Diary & Stats
+supabase/rooms.sql      friend rooms, Movie Night votes and room reports
 public/js/games/        CineWordle, Daily Mini crossword, their data and shared game code
 vercel.json             Vercel settings
 ```
@@ -74,6 +76,11 @@ vercel.json             Vercel settings
 - **Diary** (`js/diary.js`, `/lobby/diary`): every title you rated or marked watched, by month. Ratings keep the title's details (`supabase/diary.sql`); older ones are filled in from TMDB once.
 - **Stats**: totals, and breakdowns by type, language, country, decade, genre, creator and rating. The world map (`js/worldmap.js`) loads d3-geo, topojson-client, world-atlas and i18n-iso-countries from jsDelivr only when shown.
 - **Suggestions** (`js/suggest.js`, `/watchlist/suggestions`): TMDB recommendations for your favourites (4 stars and up), weighted by the genres, languages and media you rate highly; only titles rated 6.6+ by 300+ people. One daily pick outside your comfort zone: a highly rated title in a language you rarely watch.
+
+### Friend rooms and Movie Night
+
+- **Rooms** (`js/rooms.js`, `supabase/rooms.sql`): private rooms joined by a 6-character code or invite link (up to 30 people). Only members can see a room. Live updates, who is online (presence) and quick messages between players (broadcast) use Supabase Realtime. Names are checked by a word filter; anyone in a room can report it (`room_reports`, reviewed in Supabase). Only the host can close a room.
+- **Movie Night** (`js/movienight.js`, `/lobby/movie-night`): a shortlist of up to 30 titles from the lists you choose; everyone swipes yes or no; a title everyone likes is a match. Where to watch comes from TMDB's watch providers (JustWatch data) for the country you pick. Set a date; if nobody matches, vote (most picks wins) or spin the wheel, which spins the same way on every screen.
 
 ### Link import (no AI)
 
