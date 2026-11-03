@@ -12,6 +12,11 @@ const ALLOWED = [
   /^discover\/(movie|tv)$/,
   /^(movie|tv)\/\d{1,9}\/watch\/providers$/,
   /^(movie|tv)\/\d{1,9}\/images$/,
+  /^(movie|tv)\/\d{1,9}\/(credits|aggregate_credits)$/,
+  /^person\/\d{1,9}(\/combined_credits)?$/,
+  /^search\/person$/,
+  /^movie\/(upcoming|now_playing)$/,
+  /^tv\/(on_the_air|airing_today)$/,
 ];
 const PASS_PARAMS = [
   'query', 'page', 'language', 'append_to_response', 'region', 'include_image_language',

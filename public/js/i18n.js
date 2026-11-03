@@ -265,6 +265,25 @@ const dict = {
       over: 'Your streak: {n}', cleared: 'You cleared the whole run: {n}!', challengeRun: 'Challenge friends to a run',
       challengeIntro: 'A run of {n} questions, the same for everyone with this link. How far can you go?',
     },
+    dg: {
+      name: 'Six Degrees', links: '{n} links', used: 'Links used: {n} of {max}', pickTitle: 'Pick a title {name} was in', pickPerson: 'Pick someone from the cast of {title}',
+      filter: 'Filter by name', undo: 'Undo', none: 'Nothing matches.', tooMany: 'That is more than {max} links. Undo a step, or give up.', giveUp: 'Give up', won: 'Linked in {n}!',
+      help1: 'Get from the first actor to the second through titles they were in. Pick a film or series the current actor was in, then someone else from its cast, and keep going.',
+      help2: 'Each title is one link. Fewer links is better; you have six at most. Cast lists come from TMDB.',
+    },
+    pr: {
+      name: 'Poster Reveal', lead: 'A friend-room race: a poster appears tile by tile. Name it first to take the round.',
+      rule1: 'Eight posters a game. Each one uncovers over 25 seconds.', rule2: 'Pick your guess from the list. A wrong guess locks you out for 3 seconds.',
+      rule3: 'The first right answer takes the round: the earlier, the more points.', needTwo: 'You need at least 2 players.', wait: 'Wait a moment before guessing again.',
+      wrongWait: 'Not it. Wait 3 seconds.', got: '{name} got it!', nobody: 'Nobody got this one.',
+    },
+    px: {
+      lead: 'A friend-room drawing game. Take turns to draw a secret title while the others race to guess it.',
+      rule1: 'Everyone draws once. The title to draw is only shown to the drawer.', rule2: 'Guessers pick titles from the list. The database checks each guess.',
+      rule3: 'Faster right guesses score more, and the drawer scores for each friend who gets it.',
+      turn: 'Turn {i} of {n}', drawThis: 'Draw: {title}', guessThis: '{name} is drawing. What is it?', canvas: 'Drawing board', color: 'Colour', clear: 'Clear',
+      noLetters: 'No letters or numbers, please.', gotIt: '{name} got it!', solvedBy: 'Guessed by {n}',
+    },
     rating: { label: 'Rating', stars: '{n} stars' },
     join: {
       title: "You're invited", body: 'Join "{name}": {items} titles, {people} people.', btn: 'Join list',
@@ -534,6 +553,25 @@ const dict = {
       over: '你的连胜：{n}', cleared: '你答完了整组题：{n}！', challengeRun: '向好友发起挑战',
       challengeIntro: '一组 {n} 道题，拿到这个链接的人题目都一样。你能走多远？',
     },
+    dg: {
+      name: '六度空间', links: '{n} 步', used: '已用 {n}/{max} 步', pickTitle: '选一部 {name} 出演过的作品', pickPerson: '从《{title}》的演员中选一人',
+      filter: '按名字筛选', undo: '撤销', none: '没有匹配项。', tooMany: '已超过 {max} 步。撤销一步，或者放弃。', giveUp: '放弃', won: '{n} 步连上了！',
+      help1: '通过两人共同出演的作品，从第一位演员连到第二位。先选当前演员出演过的电影或剧集，再选该作品里的另一位演员，依此类推。',
+      help2: '每部作品算一步，步数越少越好，最多六步。演员表来自 TMDB。',
+    },
+    pr: {
+      name: '海报揭晓', lead: '好友房间抢答：海报一块块显露，谁先猜中谁赢这一轮。',
+      rule1: '每局八张海报，每张在 25 秒内逐渐显露。', rule2: '从列表中选择答案。猜错会被锁定 3 秒。',
+      rule3: '第一个答对的人赢得这一轮：越早答对，得分越高。', needTwo: '至少需要 2 名玩家。', wait: '请稍等再猜。',
+      wrongWait: '不对，请等 3 秒。', got: '{name} 猜中了！', nobody: '这一张没人猜中。',
+    },
+    px: {
+      lead: '好友房间绘画游戏。轮流画出一个秘密片名，其他人抢着猜。',
+      rule1: '每人画一次。要画的片名只有画手能看到。', rule2: '猜的人从列表中选片名，由数据库判断对错。',
+      rule3: '越快猜中得分越高；每有一位朋友猜中，画手也得分。',
+      turn: '第 {i}/{n} 轮', drawThis: '请画：{title}', guessThis: '{name} 正在画，猜猜是什么？', canvas: '画板', color: '颜色', clear: '清空',
+      noLetters: '请不要写字母或数字。', gotIt: '{name} 猜中了！', solvedBy: '{n} 人猜中',
+    },
     rating: { label: '评分', stars: '{n} 星' },
     join: {
       title: '你收到了邀请', body: '加入「{name}」：{items} 部作品，{people} 人。', btn: '加入片单',
@@ -802,6 +840,25 @@ const dict = {
       less: { rating: 'Peor', revenue: 'Menos', runtime: 'Más corta', episodes: 'Menos' },
       over: 'Tu racha: {n}', cleared: '¡Completaste toda la serie: {n}!', challengeRun: 'Retar a tus amigos',
       challengeIntro: 'Una serie de {n} preguntas, igual para todos con este enlace. ¿Hasta dónde llegas?',
+    },
+    dg: {
+      name: 'Seis grados', links: '{n} enlaces', used: 'Enlaces usados: {n} de {max}', pickTitle: 'Elige un título en el que salía {name}', pickPerson: 'Elige a alguien del reparto de {title}',
+      filter: 'Filtrar por nombre', undo: 'Deshacer', none: 'No hay coincidencias.', tooMany: 'Son más de {max} enlaces. Deshaz un paso o ríndete.', giveUp: 'Rendirse', won: '¡Conectados en {n}!',
+      help1: 'Llega del primer actor al segundo a través de títulos en los que salieron. Elige una película o serie del actor actual, después a otra persona de su reparto, y sigue.',
+      help2: 'Cada título es un enlace. Cuantos menos, mejor; seis como máximo. Los repartos vienen de TMDB.',
+    },
+    pr: {
+      name: 'Póster oculto', lead: 'Una carrera en sala: un póster aparece por partes. Adivínalo primero para ganar la ronda.',
+      rule1: 'Ocho pósters por partida. Cada uno se descubre en 25 segundos.', rule2: 'Elige tu respuesta de la lista. Un fallo te bloquea 3 segundos.',
+      rule3: 'La primera respuesta correcta gana la ronda: cuanto antes, más puntos.', needTwo: 'Hacen falta al menos 2 jugadores.', wait: 'Espera un momento antes de volver a intentarlo.',
+      wrongWait: 'No es. Espera 3 segundos.', got: '¡{name} lo adivinó!', nobody: 'Nadie acertó este.',
+    },
+    px: {
+      lead: 'Un juego de dibujo en sala. Por turnos, dibuja un título secreto mientras los demás intentan adivinarlo.',
+      rule1: 'Todos dibujan una vez. Solo quien dibuja ve el título.', rule2: 'Los demás eligen títulos de la lista. La base de datos comprueba cada intento.',
+      rule3: 'Cuanto antes aciertes, más puntos; quien dibuja suma por cada amigo que acierta.',
+      turn: 'Turno {i} de {n}', drawThis: 'Dibuja: {title}', guessThis: '{name} está dibujando. ¿Qué es?', canvas: 'Pizarra', color: 'Color', clear: 'Borrar',
+      noLetters: 'Sin letras ni números, por favor.', gotIt: '¡{name} lo adivinó!', solvedBy: 'Lo adivinaron {n}',
     },
     rating: { label: 'Puntuación', stars: '{n} estrellas' },
     join: {
