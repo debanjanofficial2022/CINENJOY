@@ -10,6 +10,7 @@ const ALLOWED = [
   /^(movie|tv)\/(top_rated|popular)$/,
   /^(movie|tv)\/\d{1,9}\/(recommendations|similar)$/,
   /^discover\/(movie|tv)$/,
+  /^(movie|tv)\/\d{1,9}\/watch\/providers$/,
 ];
 const PASS_PARAMS = [
   'query', 'page', 'language', 'append_to_response', 'region',

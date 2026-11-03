@@ -5,6 +5,7 @@ import * as pages from './pages.js';
 import { listsPage, listPage, joinPage } from './watchlist.js';
 import { diaryPage } from './diary.js';
 import { suggestionsPage } from './suggest.js';
+import { movieNightsPage, movieNightPage, movieNightJoinPage } from './movienight.js';
 import { registerLoader } from './loading.js';
 import { initAccount } from './data.js';
 
@@ -15,12 +16,15 @@ const routes = {
   '/lobby': { view: pages.lobby, nav: 'lobby', title: 'nav.lobby' },
   '/lobby/diary': { view: diaryPage, nav: 'lobby', title: 'diary.title' },
   '/watchlist/suggestions': { view: suggestionsPage, nav: 'watchlist', title: 'sug.title' },
+  '/lobby/movie-night': { view: movieNightsPage, nav: 'lobby', title: 'mn.title' },
 };
 
 // Addresses with a value in them: /watchlist/<list id>, /join/<invite code>
 const patterns = [
   { re: /^\/watchlist\/([0-9a-f-]{36})$/i, view: listPage, nav: 'watchlist', title: 'nav.watchlist' },
   { re: /^\/join\/([A-Za-z0-9]{4,40})$/, view: joinPage, nav: 'watchlist', title: 'nav.watchlist' },
+  { re: /^\/lobby\/movie-night\/join\/([A-Za-z0-9]{4,12})$/, view: movieNightJoinPage, nav: 'lobby', title: 'mn.title' },
+  { re: /^\/lobby\/movie-night\/([0-9a-f-]{36})$/i, view: movieNightPage, nav: 'lobby', title: 'mn.title' },
   // /games/cinewordle, /games/cinewordle/practice, /games/cinewordle/c/<challenge id>; same for crossword
   { re: /^\/games\/(cinewordle|crossword)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
 ];

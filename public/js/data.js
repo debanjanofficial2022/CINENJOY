@@ -484,3 +484,8 @@ export async function myListedKeys() {
   const rows = must(await sb.from('list_items').select('list_id, media_type, tmdb_id, meta, original_language, release_date, title, added_at'));
   return rows;
 }
+
+/** The Supabase client and the visitor's id, for features with their own data (rooms). */
+export async function supa() {
+  return ready();
+}
