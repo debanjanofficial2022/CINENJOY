@@ -1,22 +1,58 @@
-// CineWordle: guess a 5 or 6 letter film, series or anime title in six tries.
-// Daily (same title for everyone that day), practice (unlimited) and challenge links.
-import { t } from '../i18n.js';
+// CineWordle: guess a popular film (sometimes a series) title of any length in
+// six tries. Each green letter you find unlocks a clear clue, each yellow letter
+// a vague one. Daily (same title for everyone that day), practice (unlimited)
+// and challenge links.
+import { t, getLang } from '../i18n.js';
 import * as db from '../data.js';
-import * as tmdb from '../tmdb.js';
 import { track } from '../loading.js';
 import { esc, el, frag, toast, openSheet } from '../ui.js';
-import { ANSWERS, GUESSES } from './wordle-data.js';
+import { ANSWERS } from './wordle-data.js';
+import { FRAMES } from './frame-data.js';
 import {
   todayKey, dayNumber, hashString, rng, shuffle, msToMidnight, fmtCountdown,
   loadState, saveState, nextPractice, keyboard, listenKeys, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
 } from './common.js';
 
 const TRIES = 6;
+
+// Answers: popular titles of any length (4 to 14 letters, up to three words),
+// mostly films. Spaces show as gaps on the board and are not typed.
+const clean = (s) =>
+  String(s)
+    .toUpperCase()
+    .replace(/&/g, ' AND ')
+    .replace(/['’]/g, '')
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Z ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+export const POOL = (() => {
+  const out = [];
+  const seen = new Set();
+  for (const [tv, id, title, year] of FRAMES) {
+    if (/\d/.test(title)) continue;
+    const w = clean(title);
+    const n = w.replace(/ /g, '').length;
+    if (n < 4 || n > 14 || w.split(' ').length > 3) continue;
+    const mt = tv ? 'tv' : 'movie';
+    if (seen.has(`${mt}/${id}`)) continue;
+    seen.add(`${mt}/${id}`);
+    out.push({ w, mt, id, title, y: year });
+  }
+  // Well-known one-word films from the earlier word list
+  for (const a of ANSWERS) {
+    if (a.mt !== 'movie' || seen.has(`movie/${a.id}`)) continue;
+    seen.add(`movie/${a.id}`);
+    out.push({ w: a.w, mt: 'movie', id: a.id, title: a.w.charAt(0) + a.w.slice(1).toLowerCase(), y: a.y });
+  }
+  return out;
+})();
 const ORDER = shuffle(
-  ANSWERS.map((_, i) => i),
-  rng(hashString('cinenjoy-cinewordle-v1962')), // chosen so the first days are well-known titles
+  POOL.map((_, i) => i),
+  rng(hashString('cinejoy-cinewordle-any-length-v2')),
 );
-const VALID = new Set([...GUESSES.split(' '), ...ANSWERS.map((a) => a.w)]);
+const SAVE = 'cinewordle2'; // new save names: answers of any length
 
 const go = (href) => document.dispatchEvent(new CustomEvent('cinenjoy:navigate', { detail: href }));
 
@@ -44,10 +80,73 @@ export function score(guess, answer) {
 }
 
 const EMOJI = { correct: '🟩', present: '🟨', absent: '⬛' };
+const API_LANG = { en: 'en-US', 'zh-CN': 'zh-CN', es: 'es-ES' };
 
-function mediumOf(a) {
-  if (a.anime) return 'anime';
-  return a.mt === 'tv' ? 'series' : 'film';
+/** Everything the clues are written from, in the site language. */
+const infoCache = new Map();
+function infoOf(a) {
+  const key = `${a.mt}/${a.id}/${getLang()}`;
+  if (!infoCache.has(key)) {
+    const q = new URLSearchParams({ path: `${a.mt}/${a.id}`, language: API_LANG[getLang()] || 'en-US', append_to_response: 'credits,keywords' });
+    const p = fetch(`/api/tmdb?${q}`).then((r) => {
+      if (!r.ok) throw new Error('tmdb');
+      return r.json();
+    });
+    infoCache.set(key, p);
+    p.catch(() => infoCache.delete(key));
+  }
+  return infoCache.get(key);
+}
+
+/** Hide the title's own words in a clue. */
+function mask(text, a) {
+  let out = String(text || '');
+  const words = new Set([...clean(a.title).split(' '), ...a.w.split(' ')].filter((w) => w.length >= 3));
+  for (const w of words) out = out.replace(new RegExp(`\\b${w}\\b`, 'gi'), '___');
+  return out;
+}
+const firstSentence = (s) => (String(s || '').match(/^.*?[.!?。！？](\s|$)/) || [s || ''])[0].trim();
+
+/** Clear clues (one per green letter) and vague ones (one per yellow letter). */
+async function cluesFor(a) {
+  const d = await infoOf(a);
+  const cast = ((d.credits && d.credits.cast) || []).map((c) => c.name);
+  const makers = a.mt === 'movie' ? ((d.credits && d.credits.crew) || []).filter((c) => c.job === 'Director').map((c) => c.name) : (d.created_by || []).map((c) => c.name);
+  const year = String(d.release_date || d.first_air_date || a.y || '').slice(0, 4);
+  const genres = (d.genres || []).slice(0, 2).map((g) => g.name).join(', ');
+  const clear = [];
+  const vague = [];
+  if (genres) clear.push([t('cw.clue.genre'), genres]);
+  if (year) clear.push([t('cw.clue.year'), year]);
+  if (makers[0]) clear.push([t(a.mt === 'movie' ? 'cw.clue.director' : 'cw.clue.creator'), makers[0]]);
+  if (cast[0]) clear.push([t('cw.clue.actor'), cast[0]]);
+  if (cast[1]) clear.push([t('cw.clue.actor2'), cast[1]]);
+  if (d.tagline) clear.push([t('cw.clue.tagline'), mask(d.tagline, a)]);
+  if (d.overview) clear.push([t('cw.clue.plot'), mask(firstSentence(d.overview), a)]);
+
+  if (year) vague.push([t('cw.clue.decade'), t('cw.clue.decadeVal', { d: `${year.slice(0, 3)}0` })]);
+  const country = (d.production_countries && d.production_countries[0] && d.production_countries[0].name) || (d.origin_country || [])[0];
+  if (country) vague.push([t('cw.clue.country'), country]);
+  if (a.mt === 'movie' && d.runtime)
+    vague.push([t('cw.clue.length'), t(d.runtime < 100 ? 'cw.clue.short' : d.runtime <= 130 ? 'cw.clue.mid' : 'cw.clue.long')]);
+  if (a.mt === 'tv' && d.number_of_seasons) vague.push([t('cw.clue.length'), t('cw.clue.seasons', { n: d.number_of_seasons })]);
+  const kws = ((d.keywords && (d.keywords.keywords || d.keywords.results)) || []).map((k) => k.name).filter((k) => !/\d/.test(k) && mask(k, a) === k);
+  if (kws.length) vague.push([t('cw.clue.keyword'), kws[hashString(a.w) % Math.min(kws.length, 5)]]);
+  if (d.vote_average) {
+    const lo = Math.floor(d.vote_average);
+    vague.push([t('cw.clue.rating'), t('cw.clue.ratingVal', { lo, hi: lo + 1 })]);
+  }
+  if (d.original_language) {
+    let lang = d.original_language;
+    try {
+      lang = new Intl.DisplayNames([getLang()], { type: 'language' }).of(d.original_language) || lang;
+    } catch {
+      /* code it is */
+    }
+    vague.push([t('cw.clue.language'), lang]);
+  }
+  if (cast[0]) vague.push([t('cw.clue.initials'), cast[0].split(/\s+/).map((p) => `${p[0]}.`).join(' ')]);
+  return { clear, vague };
 }
 
 /** mode: 'daily' | 'practice' | 'challenge'; arg: challenge id */
@@ -57,20 +156,25 @@ export function wordlePage(mode = 'daily', arg) {
   const head = el('<header class="game-head"></header>');
   const boardBox = el('<div class="board-wrap"></div>');
   const bar = el('<div class="game-bar"></div>');
-  const hintBox = el('<div class="hint-box" aria-live="polite"></div>');
+  const hintBox = el('<div class="cw-clues" aria-live="polite"></div>');
   const kbBox = el('<div class="kb-wrap"></div>');
-  node.append(head, boardBox, hintBox, bar, kbBox);
+  node.append(head, boardBox, bar, kbBox, hintBox);
 
-  let answerIdx = null;
+  let entry = null; // { w, mt, id, title, y }
   let puzzleKey = null;
   let challenge = null;
-  let state = null; // { guesses: [], hint: null, done: false, won: false }
+  let state = null; // { guesses: [], done: false, won: false }
   let current = '';
   let busy = false;
   let kb = null;
+  let clues = null;
+  let shownClues = 0;
+  let primed = false;
 
-  const answer = () => ANSWERS[answerIdx];
-  const len = () => answer().w.length;
+  const answer = () => entry;
+  const letters = () => entry.w.replace(/ /g, '');
+  const len = () => letters().length;
+  const words = () => entry.w.split(' ');
 
   function renderHead() {
     const label =
@@ -100,96 +204,116 @@ export function wordlePage(mode = 'daily', arg) {
     head.querySelector('[data-stats]').addEventListener('click', () => showStats());
   }
 
-  function renderBoard() {
-    const rows = [];
-    for (let r = 0; r < TRIES; r += 1) {
-      const g = state.guesses[r];
-      const typing = !g && r === state.guesses.length && !state.done ? current : '';
-      const marks = g ? score(g, answer().w) : null;
+  // The board is built once; typing only changes the current row, and a
+  // submitted row is painted once, so earlier rows never move again.
+  function rowHtml(r) {
+    const g = state.guesses[r];
+    const marks = g ? score(g, letters()) : null;
+    let i = 0;
+    const parts = words().map((wd) => {
       const tiles = [];
-      for (let i = 0; i < len(); i += 1) {
-        const ch = g ? g[i] : typing[i] || '';
-        const st = marks ? marks[i] : ch ? 'typed' : 'empty';
-        tiles.push(
-          `<span class="tile-w" data-state="${st}" style="--i:${i}" ${
-            marks ? `aria-label="${esc(`${ch} ${t(`play.state.${st}`)}`)}"` : ''
-          }>${esc(ch)}</span>`,
-        );
+      for (let k = 0; k < wd.length; k += 1, i += 1) {
+        const ch = g ? g[i] : '';
+        const st = marks ? marks[i] : 'empty';
+        tiles.push(`<span class="tile-w" data-state="${st}" data-i="${i}" style="--i:${i}" ${marks ? `aria-label="${esc(`${ch} ${t(`play.state.${st}`)}`)}"` : ''}>${esc(ch)}</span>`);
       }
-      rows.push(`<div class="w-row${r === state.guesses.length && !state.done ? ' is-current' : ''}" role="row">${tiles.join('')}</div>`);
-    }
-    boardBox.innerHTML = `<div class="w-board" role="grid" aria-label="${esc(t('play.board'))}" style="--cols:${len()}">${rows.join('')}</div>`;
+      return `<span class="w-word" style="--n:${wd.length}">${tiles.join('')}</span>`;
+    });
+    return `<div class="w-row${g ? ' settled' : ''}" role="row" data-r="${r}">${parts.join('')}</div>`;
+  }
+
+  function renderBoard() {
+    const gaps = words().length - 1;
+    boardBox.innerHTML = `<div class="w-board" role="grid" aria-label="${esc(t('play.board'))}" style="--cols:${len()};--gaps:${gaps};--step:${Math.min(0.12, 1.2 / len())}s">${Array.from(
+      { length: TRIES },
+      (_, r) => rowHtml(r),
+    ).join('')}</div>`;
+    markCurrent();
+  }
+
+  function rowEl(r) {
+    return boardBox.querySelector(`.w-row[data-r="${r}"]`);
+  }
+  function markCurrent() {
+    boardBox.querySelectorAll('.w-row.is-current').forEach((x) => x.classList.remove('is-current'));
+    const row = !state.done && rowEl(state.guesses.length);
+    if (row) row.classList.add('is-current');
+  }
+
+  function paintCurrent() {
+    const row = rowEl(state.guesses.length);
+    if (!row) return;
+    row.querySelectorAll('.tile-w').forEach((tile, i) => {
+      const ch = current[i] || '';
+      if (tile.textContent !== ch) tile.textContent = ch;
+      const st = ch ? 'typed' : 'empty';
+      if (tile.dataset.state !== st) tile.dataset.state = st;
+    });
+  }
+
+  function revealRow(r) {
+    const row = rowEl(r);
+    const tmp = el(rowHtml(r));
+    tmp.classList.remove('settled');
+    row.replaceWith(tmp);
+    // Once its flip is over, the row is settled and never animates again
+    setTimeout(() => tmp.classList.add('settled'), len() * Math.min(120, 1200 / len()) + 600);
   }
 
   function markKeyboard() {
     kb.reset();
-    for (const g of state.guesses) score(g, answer().w).forEach((st, i) => kb.mark(g[i], st));
+    for (const g of state.guesses) score(g, letters()).forEach((st, i) => kb.mark(g[i], st));
   }
 
   function renderBar() {
-    const a = answer();
-    const used = state.hint;
+    const n = words().length;
     bar.replaceChildren(
       frag(`
-      <span class="muted">${esc(t('cw.letters', { n: len() }))}</span>
-      ${
-        state.done
-          ? `<button type="button" class="btn btn-small" data-result>${esc(t('play.seeResult'))}</button>`
-          : `<button type="button" class="btn btn-small btn-ghost" data-hint ${used ? 'disabled' : ''}>💡 ${esc(
-              used ? t('cw.hintUsed') : t('cw.useHint'),
-            )}</button>`
-      }`),
+      <span class="muted">${esc(n > 1 ? t('cw.lettersWords', { n: len(), w: n }) : t('cw.letters', { n: len() }))}</span>
+      ${state.done ? `<button type="button" class="btn btn-small" data-result>${esc(t('play.seeResult'))}</button>` : ''}`),
     );
-    const hb = bar.querySelector('[data-hint]');
-    if (hb) hb.addEventListener('click', chooseHint);
     const rb = bar.querySelector('[data-result]');
     if (rb) rb.addEventListener('click', showResult);
-    renderHint(a);
   }
 
-  async function hintText(kind) {
-    const a = answer();
-    if (kind === 'year') return `${t('cw.hint.year')}: ${a.y || '?'}`;
-    if (kind === 'medium') return `${t('cw.hint.medium')}: ${t(`medium.${mediumOf(a)}`)}`;
-    if (kind === 'genre') {
-      const names = await tmdb.genreNames().catch(() => ({}));
-      return `${t('cw.hint.genre')}: ${names[a.g] || '?'}`;
+  /** How many clear and vague clues the guesses so far have earned. */
+  function earned() {
+    const greens = new Set();
+    const yellows = new Set();
+    for (const g of state.guesses)
+      score(g, letters()).forEach((st, i) => {
+        if (st === 'correct') greens.add(i);
+        else if (st === 'present') yellows.add(g[i]);
+      });
+    return { clear: greens.size, vague: yellows.size };
+  }
+
+  async function renderClues() {
+    const mine = entry;
+    if (!clues) {
+      hintBox.innerHTML = `<p class="muted cw-clue-note">${esc(t('cw.clueNote'))}</p>`;
+      clues = await cluesFor(entry).catch(() => ({ clear: [], vague: [] }));
+      if (entry !== mine) return;
     }
-    return a.a ? `${t('cw.hint.actor')}: ${a.a}` : `${t('cw.hint.director')}: ${a.d || '?'}`;
-  }
-
-  async function renderHint() {
-    if (!state.hint) {
-      hintBox.replaceChildren();
-      return;
-    }
-    hintBox.textContent = `💡 ${await hintText(state.hint)}`;
-  }
-
-  function chooseHint() {
-    if (state.hint || state.done) return;
-    const box = el(`
-      <div class="form">
-        <p>${esc(t('cw.hintNote'))}</p>
-        <div class="hint-choices">
-          ${['year', 'medium', 'genre', 'actor']
-            .map((k) => `<button type="button" class="btn btn-ghost" data-k="${k}">${esc(t(`cw.hint.${k}`))}</button>`)
-            .join('')}
-        </div>
-      </div>`);
-    const close = openSheet({ title: t('cw.useHint'), body: box });
-    box.querySelectorAll('[data-k]').forEach((b) =>
-      b.addEventListener('click', () => {
-        state.hint = b.dataset.k;
-        persist();
-        close();
-        renderBar();
-      }),
-    );
+    const e = earned();
+    const list = [
+      ...clues.clear.slice(0, state.done ? clues.clear.length : e.clear).map((c) => ['clear', ...c]),
+      ...clues.vague.slice(0, state.done ? clues.vague.length : e.vague).map((c) => ['vague', ...c]),
+    ];
+    hintBox.innerHTML = `${list.length ? '' : `<p class="muted cw-clue-note">${esc(t('cw.clueNote'))}</p>`}
+      <ul class="cw-clue-list">${list
+        .map(
+          ([kind, label, text], i) =>
+            `<li class="cw-clue ${kind}${i >= shownClues && primed ? ' new' : ''}"><span class="cw-tag">${esc(t(kind === 'clear' ? 'cw.clear' : 'cw.vague'))}</span><b>${esc(label)}</b> ${esc(text)}</li>`,
+        )
+        .join('')}</ul>`;
+    if (primed && list.length > shownClues && !state.done) toast(t('cw.newClue', { n: list.length - shownClues }));
+    shownClues = list.length;
+    primed = true;
   }
 
   function persist() {
-    saveState(`cinewordle:${puzzleKey}`, state);
+    saveState(`${SAVE}:${puzzleKey}`, state);
   }
 
   function shake() {
@@ -207,7 +331,7 @@ export function wordlePage(mode = 'daily', arg) {
     else if (k === 'ENTER') return submit();
     else if (/^[A-Z]$/.test(k) && current.length < len()) current += k;
     else return;
-    renderBoard();
+    paintCurrent();
   }
 
   async function submit() {
@@ -216,34 +340,32 @@ export function wordlePage(mode = 'daily', arg) {
       shake();
       return;
     }
-    if (!VALID.has(current)) {
-      toast(t('cw.notWord'));
-      shake();
-      return;
-    }
+    const r = state.guesses.length;
     state.guesses.push(current);
     current = '';
-    const won = state.guesses[state.guesses.length - 1] === answer().w;
+    const won = state.guesses[r] === letters();
     if (won || state.guesses.length >= TRIES) {
       state.done = true;
       state.won = won;
     }
     persist();
     busy = true;
-    renderBoard();
+    revealRow(r);
+    markCurrent();
     markKeyboard();
     setTimeout(async () => {
       busy = false;
+      renderClues();
       if (state.done) {
         renderBar();
         await record();
         setTimeout(showResult, 250);
       }
-    }, len() * 120 + 200);
+    }, len() * Math.min(120, 1200 / len()) + 300);
   }
 
   async function record() {
-    const result = { won: state.won, score: state.won ? state.guesses.length : null, hintUsed: Boolean(state.hint) };
+    const result = { won: state.won, score: state.won ? state.guesses.length : null, hintUsed: false };
     try {
       if (mode === 'challenge') {
         await ensureName();
@@ -255,8 +377,8 @@ export function wordlePage(mode = 'daily', arg) {
           puzzleKey,
           won: result.won,
           score: result.score,
-          hintUsed: result.hintUsed,
-          detail: { answer: answerIdx, guesses: state.guesses, hint: state.hint },
+          hintUsed: false,
+          detail: { v: 2, answer: `${entry.mt}/${entry.id}`, guesses: state.guesses },
         });
       }
       state.saved = true;
@@ -273,8 +395,8 @@ export function wordlePage(mode = 'daily', arg) {
         : mode === 'challenge'
           ? `CINEJOY CineWordle · ${t('play.challenge')}`
           : 'CINEJOY CineWordle';
-    const sc = `${state.won ? state.guesses.length : 'X'}/${TRIES}${state.hint ? ' 💡' : ''}`;
-    const grid = state.guesses.map((g) => score(g, answer().w).map((s) => EMOJI[s]).join('')).join('\n');
+    const sc = `${state.won ? state.guesses.length : 'X'}/${TRIES}`;
+    const grid = state.guesses.map((g) => score(g, letters()).map((s) => EMOJI[s]).join('')).join('\n');
     return `${head} ${sc}\n${grid}`;
   }
 
@@ -282,9 +404,7 @@ export function wordlePage(mode = 'daily', arg) {
     const a = answer();
     const box = el(`
       <div class="result-box">
-        <p class="result-head">${esc(state.won ? t('cw.won', { n: state.guesses.length }) : t('cw.lost'))}${
-          state.hint ? ` <span class="chip">💡 ${esc(t('cw.hintUsed'))}</span>` : ''
-        }</p>
+        <p class="result-head">${esc(state.won ? t('cw.won', { n: state.guesses.length }) : t('cw.lost'))}</p>
         <div data-card></div>
         <div class="result-actions">
           <button type="button" class="btn" data-share>${esc(t('play.shareResult'))}</button>
@@ -293,7 +413,7 @@ export function wordlePage(mode = 'daily', arg) {
         </div>
         <div data-extra></div>
       </div>`);
-    box.querySelector('[data-card]').append(titleCard({ ...a, label: a.w, medium: mediumOf(a) }));
+    box.querySelector('[data-card]').append(titleCard({ mt: a.mt, id: a.id, y: a.y, label: a.title, medium: a.mt === 'tv' ? 'series' : 'film' }));
     const close = openSheet({ title: 'CineWordle', body: box });
     box.querySelectorAll('a[data-link]').forEach((x) => x.addEventListener('click', () => close()));
     box.querySelector('[data-share]').addEventListener('click', () =>
@@ -312,7 +432,7 @@ export function wordlePage(mode = 'daily', arg) {
         try {
           await ensureName();
           const id = await track(
-            db.createChallenge('cinewordle', { answer: answerIdx }, { won: state.won, score: state.won ? state.guesses.length : null, hintUsed: Boolean(state.hint) }),
+            db.createChallenge('cinewordle', { v: 2, mt: entry.mt, id: entry.id, w: entry.w, title: entry.title, y: entry.y }, { won: state.won, score: state.won ? state.guesses.length : null, hintUsed: false }),
           );
           await share(t('play.challengeText', { game: 'CineWordle' }), challengeUrl('cinewordle', id));
         } catch (err) {
@@ -352,13 +472,18 @@ export function wordlePage(mode = 'daily', arg) {
         <div class="help-row"><span class="tile-w" data-state="present">L</span>${esc(t('cw.helpPresent'))}</div>
         <div class="help-row"><span class="tile-w" data-state="absent">X</span>${esc(t('cw.helpAbsent'))}</div>
         <p>${esc(t('cw.help3'))}</p>
+        <p>${esc(t('cw.help4'))}</p>
       </div>`),
     });
   }
 
-  function begin() {
-    state = loadState(`cinewordle:${puzzleKey}`) || { guesses: [], hint: null, done: false, won: false };
+  function begin(next) {
+    entry = next;
+    state = loadState(`${SAVE}:${puzzleKey}`) || { guesses: [], done: false, won: false };
     current = '';
+    clues = null;
+    shownClues = 0;
+    primed = false;
     renderHead();
     renderBoard();
     if (!kb) {
@@ -368,46 +493,37 @@ export function wordlePage(mode = 'daily', arg) {
     }
     markKeyboard();
     renderBar();
+    renderClues();
     // Saved but not yet on the server (offline earlier): try again
     if (state.done && !state.saved) record();
   }
 
   function startPractice(fresh = false) {
-    let saved = null;
-    try {
-      saved = JSON.parse(localStorage.getItem('cinenjoy:game:cinewordle:practice-current') || 'null');
-    } catch {
-      saved = null;
-    }
-    if (fresh || !saved || saved.answer == null || !ANSWERS[saved.answer]) {
-      const i = nextPractice('cinewordle', ANSWERS.length, dailyIndex());
+    let saved = loadState(`${SAVE}:practice-current`);
+    if (fresh || !saved || saved.answer == null || !POOL[saved.answer]) {
+      const i = nextPractice(SAVE, POOL.length, dailyIndex());
       saved = { answer: i, key: `p-${i}-${Date.now().toString(36)}` };
-      try {
-        localStorage.setItem('cinenjoy:game:cinewordle:practice-current', JSON.stringify(saved));
-      } catch {
-        /* fine */
-      }
+      saveState(`${SAVE}:practice-current`, saved);
     }
-    answerIdx = saved.answer;
     puzzleKey = saved.key;
-    begin();
+    begin(POOL[saved.answer]);
   }
 
   async function start() {
     if (mode === 'daily') {
       puzzleKey = todayKey();
-      answerIdx = dailyIndex(puzzleKey);
-      begin();
+      begin(POOL[dailyIndex(puzzleKey)]);
       // Played today on another device? Show that result.
       if (!state.done) {
         const results = await db.myResults('cinewordle', 30).catch(() => []);
-        const today = results.find((r) => r.mode === 'daily' && r.puzzle_key === puzzleKey);
-        if (today && today.detail && Array.isArray(today.detail.guesses)) {
-          state = { guesses: today.detail.guesses, hint: today.detail.hint || null, done: true, won: today.won, saved: true };
+        const today = results.find((r) => r.mode === 'daily' && r.puzzle_key === puzzleKey && r.detail && r.detail.v === 2);
+        if (today && Array.isArray(today.detail.guesses)) {
+          state = { guesses: today.detail.guesses, done: true, won: today.won, saved: true };
           persist();
           renderBoard();
           markKeyboard();
           renderBar();
+          renderClues();
         }
       }
     } else if (mode === 'practice') {
@@ -419,14 +535,14 @@ export function wordlePage(mode = 'daily', arg) {
       } catch (err) {
         console.warn(err);
       }
-      if (!challenge || challenge.game !== 'cinewordle' || !ANSWERS[challenge.puzzle && challenge.puzzle.answer]) {
+      const p = challenge && challenge.puzzle;
+      if (!challenge || challenge.game !== 'cinewordle' || !p || p.v !== 2 || !p.w) {
         renderHead();
         boardBox.replaceChildren(el(`<div class="error-box"><p>${esc(t('play.challengeMissing'))}</p></div>`));
         return;
       }
-      answerIdx = challenge.puzzle.answer;
       puzzleKey = `c-${challenge.id}`;
-      begin();
+      begin({ w: clean(p.w), mt: p.mt, id: p.id, title: p.title || p.w, y: p.y });
     }
   }
 
