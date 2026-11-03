@@ -11,9 +11,10 @@ const ALLOWED = [
   /^(movie|tv)\/\d{1,9}\/(recommendations|similar)$/,
   /^discover\/(movie|tv)$/,
   /^(movie|tv)\/\d{1,9}\/watch\/providers$/,
+  /^(movie|tv)\/\d{1,9}\/images$/,
 ];
 const PASS_PARAMS = [
-  'query', 'page', 'language', 'append_to_response', 'region',
+  'query', 'page', 'language', 'append_to_response', 'region', 'include_image_language',
   // discover filters (for suggestions)
   'sort_by', 'with_original_language', 'with_genres', 'without_genres', 'vote_count.gte', 'vote_average.gte',
   'primary_release_date.gte', 'primary_release_date.lte', 'first_air_date.gte', 'first_air_date.lte', 'with_origin_country',

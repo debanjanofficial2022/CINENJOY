@@ -26,7 +26,9 @@ const patterns = [
   { re: /^\/lobby\/movie-night\/join\/([A-Za-z0-9]{4,12})$/, view: movieNightJoinPage, nav: 'lobby', title: 'mn.title' },
   { re: /^\/lobby\/movie-night\/([0-9a-f-]{36})$/i, view: movieNightPage, nav: 'lobby', title: 'mn.title' },
   // /games/cinewordle, /games/cinewordle/practice, /games/cinewordle/c/<challenge id>; same for crossword
-  { re: /^\/games\/(cinewordle|crossword)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
+  { re: /^\/games\/(cinewordle|crossword|frame)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
+  // CineQuiz: /games/quiz, /games/quiz/c/<id>, /games/quiz/room/<id>, /games/quiz/join/<code>
+  { re: /^\/games\/quiz(?:\/(c|room|join)\/([0-9a-f-]{36}|[A-Za-z0-9]{4,12}))?$/i, view: quizView, nav: 'games', title: 'nav.games' },
 ];
 
 function match(path) {
@@ -40,13 +42,28 @@ function match(path) {
 
 // Games load on demand: their word lists are only needed when you play
 function gameView(game, practice, challengeId) {
+  const mode = practice ? 'practice' : challengeId ? 'challenge' : 'daily';
+  const g = game.toLowerCase();
+  const load =
+    g === 'cinewordle'
+      ? import('./games/wordle.js').then((m) => m.wordlePage(mode, challengeId))
+      : g === 'frame'
+        ? import('./games/frame.js').then((m) => m.framePage(mode, challengeId))
+        : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
+  return lazy(load);
+}
+
+function quizView(kind, value) {
+  return lazy(
+    import('./games/quiz.js').then((m) =>
+      kind === 'room' ? m.quizRoomPage(value) : kind === 'join' ? m.quizJoinPage(value) : m.quizPage(kind === 'c' ? 'challenge' : 'practice', value),
+    ),
+  );
+}
+
+function lazy(load) {
   const holder = document.createElement('section');
   holder.className = 'page';
-  const mode = practice ? 'practice' : challengeId ? 'challenge' : 'daily';
-  const load =
-    game.toLowerCase() === 'cinewordle'
-      ? import('./games/wordle.js').then((m) => m.wordlePage(mode, challengeId))
-      : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
   load
     .then((node) => {
       if (holder.isConnected) holder.replaceWith(node);
