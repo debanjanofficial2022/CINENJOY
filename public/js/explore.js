@@ -175,7 +175,7 @@ export function explorePage() {
         try {
           const [best, popular] = await track(
             Promise.all([
-              discover(ty.mt, { ...ty.params, sort_by: 'vote_average.desc', 'vote_count.gte': ty.mt === 'tv' ? 300 : 500 }),
+              discover(ty.mt, { ...ty.params, sort_by: 'vote_average.desc', 'vote_count.gte': ty.mt === 'tv' ? 300 : k === 'film' ? 3000 : 300 }),
               discover(ty.mt, { ...ty.params, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
             ]),
           );

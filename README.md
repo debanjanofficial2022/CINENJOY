@@ -26,7 +26,7 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | a | Emoji Plot, Timeline, Higher or Lower | Done |
 | b | Six Degrees, Poster Reveal, CinePictionary | Done |
 | c | Weekend 11x11 crossword | Done |
-| d | Lobby: Explore and CineHistory; badges; year in review | Next |
+| d | Lobby: Explore and CineHistory; badges; year in review | Done |
 
 ## How it is built
 
@@ -100,6 +100,13 @@ vercel.json             Vercel settings
 - **Diary** (`js/diary.js`, `/lobby/diary`): every title you rated or marked watched, by month. Ratings keep the title's details (`supabase/diary.sql`); older ones are filled in from TMDB once.
 - **Stats**: totals, and breakdowns by type, language, country, decade, genre, creator and rating. The world map (`js/worldmap.js`) loads d3-geo, topojson-client, world-atlas and i18n-iso-countries from jsDelivr only when shown.
 - **Suggestions** (`js/suggest.js`, `/watchlist/suggestions`): TMDB recommendations for your favourites (4 stars and up), weighted by the genres, languages and media you rate highly; only titles rated 6.6+ by 300+ people. One daily pick outside your comfort zone: a highly rated title in a language you rarely watch.
+
+### Explore, CineHistory, Badges and Year in review
+
+- **Explore** (`js/explore.js`, `/lobby/explore`): coming soon (TMDB upcoming films for your country, series on air), and the most-loved films and series by country or language, by film movement (eleven movements with their years and country, e.g. Italian Neorealism, Italy 1943–1955) or by type (films, series, anime, documentaries, shorts). Tap a poster for details, or add it to a list.
+- **CineHistory** (`js/history.js`, `history-data.js`, `/lobby/history`): eleven true stories of films that changed the real world and an eleven-step history of cinema, each with its source link (Wikipedia). Written in the three site languages.
+- **Badges** (`js/badges.js`, `/lobby/badges`): 18 badges worked out from your ratings, watched titles and game results; nothing extra is stored.
+- **Year in review**: titles watched, films and series, hours (from running times), top genre, country and language, highest rated, games played. Pick a year; save the card as an image or share it.
 
 ### Friend rooms and Movie Night
 
