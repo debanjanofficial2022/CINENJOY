@@ -13,7 +13,8 @@ import {
 
 const HINT_COST = 20;
 const WRONG_COST = 10;
-const ORDER = shuffle(CRYPTIC.map((_, i) => i), rng(hashString('cinenjoy-cryptic-v1316')) // chosen so the first days have clear clues);
+// The seed is chosen so the first days have clear clues
+const ORDER = shuffle(CRYPTIC.map((_, i) => i), rng(hashString('cinenjoy-cryptic-v1316')));
 
 export function dailyClue(key = todayKey()) {
   const n = dayNumber(key);
