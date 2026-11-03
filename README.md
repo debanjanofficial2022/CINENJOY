@@ -24,8 +24,8 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | Phase 3 step | What | State |
 | --- | --- | --- |
 | a | Emoji Plot, Timeline, Higher or Lower | Done |
-| b | Six Degrees, Poster Reveal, CinePictionary | Next |
-| c | Weekend 11x11 crossword | To do |
+| b | Six Degrees, Poster Reveal, CinePictionary | Done |
+| c | Weekend 11x11 crossword | Next |
 | d | Lobby: Explore and CineHistory; badges; year in review | To do |
 
 ## How it is built
@@ -64,6 +64,7 @@ supabase/diary.sql      title details kept on ratings, for Diary & Stats
 supabase/rooms.sql      friend rooms, Movie Night votes and room reports
 supabase/moves.sql      moves in game rooms (quiz answers, clues, votes); allows the newer game names
 supabase/secrets.sql    cards dealt by the database in Movie Impostor (each player reads only their own)
+supabase/pictionary.sql CinePictionary: the drawer's title and guesses checked by the database
 public/js/games/        the games, their data and shared game code
 vercel.json             Vercel settings
 ```
@@ -84,6 +85,10 @@ vercel.json             Vercel settings
 - **Emoji Plot** (`js/games/emoji.js`, `emoji-data.js`): name the title from emojis written by hand for 170 well-known titles; three tries, with the year and then the type and first letter as hints.
 - **Timeline** (`js/games/timeline.js`): put five well-known titles in release order; three checks, and titles in the right place lock in green.
 - **Higher or Lower** (`js/games/higher.js`): rating, box office, running time or episode count, from TMDB. Practice is an endless streak; a challenge link stores one 25-title run so friends get the same questions.
+- **Six Degrees** (`js/games/degrees.js`): link the leads of two well-known films through titles and casts from TMDB (`person/…/combined_credits`, `…/credits`); six links at most.
+- **Poster Reveal** (`js/games/poster.js`): a friend-room race; a poster uncovers tile by tile over 25 seconds and the first right answer takes the round.
+- **CinePictionary** (`js/games/pictionary.js`, `supabase/pictionary.sql`): each player draws a secret title once. Strokes travel as Realtime broadcast messages and are never stored. The database deals the title to the drawer only and checks every guess (`pictionary_guess`), so nobody can read the answer early.
+- Room games share `js/games/roomkit.js` (start page, join link, live room).
 - The smaller daily games share one frame (`js/games/shell.js`) for daily, practice and challenge puzzles, saving and the result sheet.
 - Results, streaks and stats are saved to the visitor's account (`game_results`, `challenges`, `challenge_results` in `supabase/games.sql`).
 - **Games data** (`js/games/wordle-data.js`, `crossword-data.js`) was generated once from TMDB top-rated titles (11,600 films and series) and a list of common English words (google-10000-english). Answers are kept in the files so the daily puzzles stay the same for everyone.
