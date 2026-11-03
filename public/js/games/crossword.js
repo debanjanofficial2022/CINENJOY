@@ -5,7 +5,7 @@ import * as db from '../data.js';
 import * as tmdb from '../tmdb.js';
 import { track } from '../loading.js';
 import { esc, el, frag, toast, openSheet } from '../ui.js';
-import { generate, slotsOf } from './crossword-gen.js';
+import { generate, generateFree, slotsOf } from './crossword-gen.js';
 import {
   todayKey, dayNumber, hashString, rng, msToMidnight, fmtCountdown, fmtTime,
   loadState, saveState, keyboard, listenKeys, ensureName, share, challengeUrl, boardHtml,
@@ -25,6 +25,39 @@ function vocab() {
   return vocabP;
 }
 
+// The Weekend puzzle also uses longer answers: CineWordle titles, and well-known
+// titles run together ("LALALAND"), with their word lengths shown in the clue.
+let weekendP = null;
+function weekendVocab() {
+  if (!weekendP) {
+    weekendP = Promise.all([vocab(), import('./wordle-data.js'), import('./frame-data.js')]).then(([base, { ANSWERS }, { FRAMES }]) => {
+      const map = new Map(base.map);
+      for (const a of ANSWERS) if (!map.has(a.w)) map.set(a.w, [a.w, 't', a.mt === 'tv' ? 1 : 0, a.id, a.y, a.g, a.d, a.a, a.anime ? 1 : 0]);
+      for (const [tv, id, title, year] of FRAMES) {
+        if (Number(year) >= 2026 || /\d/.test(title)) continue;
+        const parts = title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/^THE /, '').split(/[^A-Z]+/).filter(Boolean);
+        const w = parts.join('');
+        if (w.length < 4 || w.length > 11 || map.has(w)) continue;
+        map.set(w, [w, 'f', tv, id, year, parts.map((x) => x.length).join(',')]);
+      }
+      return { words: [...map.keys()], map };
+    });
+  }
+  return weekendP;
+}
+
+/** Turn a title-run row ('f') into a full clue row from TMDB details. */
+async function fillRow(row) {
+  const [w, , tv, id, year, lens] = row;
+  try {
+    const d = await tmdb.details(tv ? 'tv' : 'movie', id);
+    const m = d.meta || {};
+    return [w, 't', tv, id, year, (m.genres || [])[0], (m.directors || [])[0] || '', (m.cast || [])[0] || '', m.anime ? 1 : 0, lens];
+  } catch {
+    return [w, 't', tv, id, year, null, '', '', 0, lens];
+  }
+}
+
 // ---------- Clues, written from each title's details in the site language ----------
 
 function blanked(title, word) {
@@ -35,6 +68,11 @@ function blanked(title, word) {
 }
 
 function clueFor(row, genres) {
+  const text = clueText(row, genres);
+  return row && row[1] === 't' && row[9] && String(row[9]).includes(',') ? `${text} (${row[9]})` : text;
+}
+
+function clueText(row, genres) {
   const lang = getLang();
   if (!row) return '?';
   if (row[1] === 'b') {
@@ -64,9 +102,30 @@ function clueFor(row, genres) {
 
 // ---------- The page ----------
 
-export function crosswordPage(mode = 'daily', arg) {
+// The weekend puzzle is the same from Saturday to Friday: its key is that Saturday's date
+export function weekendKey(d = new Date()) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 1) % 7));
+  return todayKey(x);
+}
+
+const VARIANTS = {
+  mini: { game: 'crossword', path: '/games/crossword', seed: 'cinenjoy-mini', title: () => t('mini.title'), make: (words, rand) => generate(words, rand), dailyKey: () => todayKey(), dailyN: () => dayNumber() },
+  weekend: {
+    game: 'weekend',
+    path: '/games/weekend',
+    seed: 'cinenjoy-weekend',
+    title: () => t('wk.title'),
+    make: (words, rand) => generateFree(words, rand, 11),
+    dailyKey: () => weekendKey(),
+    dailyN: () => Math.floor((dayNumber(weekendKey()) - 1) / 7) + 1,
+  },
+};
+
+export function crosswordPage(mode = 'daily', arg, variant = 'mini') {
+  const V = VARIANTS[variant];
+  const words = variant === 'weekend' ? weekendVocab : vocab;
   const node = document.createElement('section');
-  node.className = 'page game mini';
+  node.className = `page game mini${variant === 'weekend' ? ' weekend' : ''}`;
   const head = el('<header class="game-head"></header>');
   const tools = el('<div class="mini-tools"></div>');
   const clueBar = el('<div class="clue-bar" aria-live="polite"></div>');
@@ -88,7 +147,7 @@ export function crosswordPage(mode = 'daily', arg) {
   let timer = null;
   let lastTick = Date.now();
   let kb = null;
-  const N = 5;
+  let N = 5;
 
   const isBlack = (r, c) => puzzle.grid[r][c] === '#';
   const slotAt = (r, c, dir) => puzzle.slots.find((s) => s.dir === dir && cellsOf(s).some(([y, x]) => y === r && x === c));
@@ -97,18 +156,18 @@ export function crosswordPage(mode = 'daily', arg) {
 
   function renderHead() {
     const label =
-      mode === 'daily' ? t('play.dailyN', { n: dayNumber() }) : mode === 'practice' ? t('play.practice') : t('play.challenge');
+      mode === 'daily' ? t(variant === 'weekend' ? 'wk.weekN' : 'play.dailyN', { n: V.dailyN() }) : mode === 'practice' ? t('play.practice') : t('play.challenge');
     head.replaceChildren(
       frag(`
       <a class="back" href="/games" data-link>‹ ${esc(t('nav.games'))}</a>
       <div class="game-title-row">
-        <h1>${esc(t('mini.title'))}</h1>
+        <h1>${esc(V.title())}</h1>
         <span class="chip">${esc(label)}</span>
       </div>
       <div class="game-links">
         <button type="button" class="link-btn" data-help>${esc(t('play.howToPlay'))}</button>
-        ${mode !== 'daily' ? `<a class="link-btn" href="/games/crossword" data-link>${esc(t('play.daily'))}</a>` : ''}
-        ${mode !== 'practice' ? `<a class="link-btn" href="/games/crossword/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
+        ${mode !== 'daily' ? `<a class="link-btn" href="${V.path}" data-link>${esc(t('play.daily'))}</a>` : ''}
+        ${mode !== 'practice' ? `<a class="link-btn" href="${V.path}/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
         <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
       </div>
       ${getLang() !== 'en' ? `<p class="fine-print">${esc(t('mini.englishNote'))}</p>` : ''}`),
@@ -163,7 +222,7 @@ export function crosswordPage(mode = 'daily', arg) {
     const slot = currentSlot();
     const inWord = new Set(slot ? cellsOf(slot).map(([r, c]) => key(r, c)) : []);
     const nums = new Map(puzzle.slots.map((s) => [key(s.row, s.col), s.num]));
-    let html = `<div class="mini-grid" role="grid" aria-label="${esc(t('mini.title'))}">`;
+    let html = `<div class="mini-grid" role="grid" aria-label="${esc(V.title())}" style="--n:${N}">`;
     for (let r = 0; r < N; r += 1) {
       html += '<div class="mini-row" role="row">';
       for (let c = 0; c < N; c += 1) {
@@ -410,7 +469,7 @@ export function crosswordPage(mode = 'daily', arg) {
   }
 
   function persist() {
-    saveState(`crossword:${puzzleKey}`, { ...state, grid: puzzle.grid, pattern: puzzle.pattern });
+    saveState(`${V.game}:${puzzleKey}`, { ...state, grid: puzzle.grid, pattern: puzzle.pattern });
   }
 
   // ---------- Finishing ----------
@@ -425,6 +484,13 @@ export function crosswordPage(mode = 'daily', arg) {
     setTimeout(showResult, 300);
   }
 
+  // Time until the next puzzle: midnight, or for the weekend puzzle, next Saturday
+  const untilNext = () => {
+    if (variant !== 'weekend') return msToMidnight();
+    const d = new Date();
+    return msToMidnight() + (((6 - d.getDay() + 7) % 7) || 7) * 86400000 - 86400000;
+  };
+
   const totalSeconds = () => Math.round(state.elapsed + state.penalty);
 
   async function record() {
@@ -436,7 +502,7 @@ export function crosswordPage(mode = 'daily', arg) {
       }
       else
         await db.saveResult({
-          game: 'crossword',
+          game: V.game,
           mode,
           puzzleKey,
           won: result.won,
@@ -452,24 +518,26 @@ export function crosswordPage(mode = 'daily', arg) {
   }
 
   function shareText() {
-    const head = mode === 'daily' ? `CINENJOY ${t('mini.title')} #${dayNumber()}` : `CINENJOY ${t('mini.title')}`;
+    const head = mode === 'daily' ? `CINENJOY ${V.title()} #${V.dailyN()}` : `CINENJOY ${V.title()}`;
     const helped = Object.keys(state.revealed).length ? ` · ${t('mini.revealedN', { n: Object.keys(state.revealed).length })}` : '';
     return state.won ? `${head} ⏱ ${fmtTime(totalSeconds())}${helped}` : `${head} · ${t('mini.revealedAll')}`;
   }
 
   async function miniStatsHtml() {
-    const results = await db.myResults('crossword').catch(() => []);
+    const results = await db.myResults(V.game).catch(() => []);
     const daily = results.filter((r) => r.mode === 'daily');
     const days = new Map(daily.map((r) => [r.puzzle_key, r]));
     const wins = [...days.values()].filter((r) => r.won);
     const best = wins.length ? Math.min(...wins.map((r) => r.score)) : null;
     const avg = wins.length ? wins.reduce((a, r) => a + r.score, 0) / wins.length : null;
     let streak = 0;
-    const d = new Date();
-    if (!days.has(todayKey(d))) d.setDate(d.getDate() - 1);
+    const step = variant === 'weekend' ? 7 : 1;
+    const [yy, mm, dd] = V.dailyKey().split('-').map(Number);
+    const d = new Date(yy, mm - 1, dd);
+    if (!days.has(todayKey(d))) d.setDate(d.getDate() - step);
     while (days.get(todayKey(d)) && days.get(todayKey(d)).won) {
       streak += 1;
-      d.setDate(d.getDate() - 1);
+      d.setDate(d.getDate() - step);
     }
     return `<div class="stats">
       <div class="stat"><b>${days.size}</b><span>${esc(t('play.played'))}</span></div>
@@ -489,16 +557,16 @@ export function crosswordPage(mode = 'daily', arg) {
           ${mode !== 'challenge' ? `<button type="button" class="btn btn-ghost" data-challenge>${esc(t('play.challengeFriend'))}</button>` : ''}
           ${
             mode !== 'practice'
-              ? `<a class="btn btn-ghost" href="/games/crossword/practice" data-link>${esc(t('play.playPractice'))}</a>`
+              ? `<a class="btn btn-ghost" href="${V.path}/practice" data-link>${esc(t('play.playPractice'))}</a>`
               : `<button type="button" class="btn btn-ghost" data-again>${esc(t('play.playAgain'))}</button>`
           }
         </div>
         <div data-extra></div>
       </div>`);
-    const close = openSheet({ title: t('mini.title'), body: box });
+    const close = openSheet({ title: V.title(), body: box });
     box.querySelectorAll('a[data-link]').forEach((x) => x.addEventListener('click', () => close()));
     box.querySelector('[data-share]').addEventListener('click', () =>
-      share(shareText(), mode === 'challenge' ? challengeUrl('crossword', challenge.id) : `${location.origin}/games/crossword`),
+      share(shareText(), mode === 'challenge' ? challengeUrl(V.game, challenge.id) : `${location.origin}${V.path}`),
     );
     const again = box.querySelector('[data-again]');
     if (again)
@@ -519,7 +587,7 @@ export function crosswordPage(mode = 'daily', arg) {
               { won: state.won, score: state.won ? totalSeconds() : null, hintUsed: Object.keys(state.revealed).length > 0 },
             ),
           );
-          await share(t('play.challengeText', { game: t('mini.title') }), challengeUrl('crossword', id));
+          await share(t('play.challengeText', { game: V.title() }), challengeUrl(V.game, id));
         } catch (err) {
           console.warn(err);
           toast(t('errors.generic'), 'error');
@@ -529,11 +597,11 @@ export function crosswordPage(mode = 'daily', arg) {
       });
     const extra = box.querySelector('[data-extra]');
     if (mode === 'daily') {
-      extra.innerHTML = `${await miniStatsHtml()}<p class="muted next-in">${esc(t('play.nextIn'))} <b data-cd>${fmtCountdown(msToMidnight())}</b></p>`;
+      extra.innerHTML = `${await miniStatsHtml()}<p class="muted next-in">${esc(t('play.nextIn'))} <b data-cd>${fmtCountdown(untilNext())}</b></p>`;
       const cd = extra.querySelector('[data-cd]');
       const tm = setInterval(() => {
         if (!cd.isConnected) return clearInterval(tm);
-        cd.textContent = fmtCountdown(msToMidnight());
+        cd.textContent = fmtCountdown(untilNext());
       }, 1000);
     } else if (mode === 'challenge') {
       const rows = await db.challengeBoard(challenge.id).catch(() => []);
@@ -559,16 +627,31 @@ export function crosswordPage(mode = 'daily', arg) {
   // ---------- Starting ----------
 
   async function begin(p) {
+    N = p.grid.length;
     puzzle = { pattern: p.pattern, grid: p.grid, slots: slotsOf(p.pattern).map((s) => ({ ...s, len: s.cells.length })).sort((a, b) => a.num - b.num) };
-    const saved = loadState(`crossword:${puzzleKey}`);
+    const saved = loadState(`${V.game}:${puzzleKey}`);
     const fresh = () => ({ letters: puzzle.grid.map((row) => row.split('').map(() => '')), elapsed: 0, penalty: 0, checked: {}, revealed: {}, done: false, won: false });
     state = saved && saved.grid && saved.grid.join() === puzzle.grid.join() ? saved : fresh();
-    const { map } = await vocab();
+    const { map } = await words();
     const genres = await tmdb.genreNames().catch(() => ({}));
     clues = {};
+    const wordOf = (s) => cellsOf(s).map(([r, c]) => puzzle.grid[r][c]).join('');
+    await track(
+      Promise.all(
+        puzzle.slots
+          .map(wordOf)
+          .filter((w) => map.get(w) && map.get(w)[1] === 'f')
+          .map(async (w) => map.set(w, await fillRow(map.get(w)))),
+      ),
+    );
     for (const s of puzzle.slots) {
-      const word = cellsOf(s).map(([r, c]) => puzzle.grid[r][c]).join('');
-      clues[`${s.num}${s.dir}`] = clueFor(map.get(word), genres);
+      const word = wordOf(s);
+      let row = map.get(word);
+      if (row && row[1] === 'f') {
+        row = await fillRow(row);
+        map.set(word, row);
+      }
+      clues[`${s.num}${s.dir}`] = clueFor(row, genres);
     }
     const first = puzzle.slots.find((s) => s.dir === 'across');
     goToSlot(first);
@@ -587,10 +670,10 @@ export function crosswordPage(mode = 'daily', arg) {
   }
 
   async function makePuzzle(seedText) {
-    const { words } = await vocab();
+    const { words: list } = await words();
     let n = 0;
     for (;;) {
-      const p = generate(words, rng(hashString(`${seedText}:${n}`)));
+      const p = V.make(list, rng(hashString(`${seedText}:${n}`)));
       if (p) return p;
       n += 1;
     }
@@ -599,20 +682,20 @@ export function crosswordPage(mode = 'daily', arg) {
   async function startPractice(fresh = false) {
     let saved = null;
     try {
-      saved = JSON.parse(localStorage.getItem('cinenjoy:game:crossword:practice-current') || 'null');
+      saved = JSON.parse(localStorage.getItem(`cinenjoy:game:${V.game}:practice-current`) || 'null');
     } catch {
       saved = null;
     }
     if (fresh || !saved || !saved.key) {
       saved = { key: `p-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}` };
       try {
-        localStorage.setItem('cinenjoy:game:crossword:practice-current', JSON.stringify(saved));
+        localStorage.setItem(`cinenjoy:game:${V.game}:practice-current`, JSON.stringify(saved));
       } catch {
         /* fine */
       }
     }
     puzzleKey = saved.key;
-    const p = await track(makePuzzle(`cinenjoy-mini-${saved.key}`));
+    const p = await track(makePuzzle(`${V.seed}-${saved.key}`));
     await begin(p);
   }
 
@@ -620,15 +703,15 @@ export function crosswordPage(mode = 'daily', arg) {
     renderHeadLoading();
     try {
       if (mode === 'daily') {
-        puzzleKey = todayKey();
-        const saved = loadState(`crossword:${puzzleKey}`);
-        const p = saved && saved.grid ? { pattern: saved.pattern, grid: saved.grid } : await track(makePuzzle(`cinenjoy-mini-${puzzleKey}`));
+        puzzleKey = V.dailyKey();
+        const saved = loadState(`${V.game}:${puzzleKey}`);
+        const p = saved && saved.grid ? { pattern: saved.pattern, grid: saved.grid } : await track(makePuzzle(`${V.seed}-${puzzleKey}`));
         await begin(p);
       } else if (mode === 'practice') {
         await startPractice();
       } else {
         challenge = await track(db.getChallenge(arg));
-        if (!challenge || challenge.game !== 'crossword' || !challenge.puzzle || !Array.isArray(challenge.puzzle.grid)) {
+        if (!challenge || challenge.game !== V.game || !challenge.puzzle || !Array.isArray(challenge.puzzle.grid)) {
           renderHead();
           gridBox.replaceChildren(el(`<div class="error-box"><p>${esc(t('play.challengeMissing'))}</p></div>`));
           return;
@@ -643,7 +726,7 @@ export function crosswordPage(mode = 'daily', arg) {
   }
 
   function renderHeadLoading() {
-    head.replaceChildren(frag(`<a class="back" href="/games" data-link>‹ ${esc(t('nav.games'))}</a><h1>${esc(t('mini.title'))}</h1>`));
+    head.replaceChildren(frag(`<a class="back" href="/games" data-link>‹ ${esc(t('nav.games'))}</a><h1>${esc(V.title())}</h1>`));
     gridBox.replaceChildren(el(`<div class="loading-box"><span class="spinner"></span>${esc(t('ui.loading'))}</div>`));
   }
 

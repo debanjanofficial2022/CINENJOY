@@ -21,6 +21,7 @@ function section(cls, inner) {
 const GAMES = [
   { id: 'cinewordle', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/cinewordle' },
   { id: 'crossword', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/crossword' },
+  { id: 'weekend', modes: ['daily', 'practice', 'challenge'], phase: 3, href: '/games/weekend' },
   { id: 'cryptic', modes: ['daily', 'practice', 'challenge'], phase: 2, href: '/games/cryptic' },
   { id: 'quiz', modes: ['practice', 'room', 'challenge'], phase: 2, href: '/games/quiz' },
   { id: 'frame', modes: ['daily', 'practice', 'challenge'], phase: 2, href: '/games/frame' },

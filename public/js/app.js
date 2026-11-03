@@ -26,7 +26,7 @@ const patterns = [
   { re: /^\/lobby\/movie-night\/join\/([A-Za-z0-9]{4,12})$/, view: movieNightJoinPage, nav: 'lobby', title: 'mn.title' },
   { re: /^\/lobby\/movie-night\/([0-9a-f-]{36})$/i, view: movieNightPage, nav: 'lobby', title: 'mn.title' },
   // /games/cinewordle, /games/cinewordle/practice, /games/cinewordle/c/<challenge id>; same for crossword
-  { re: /^\/games\/(cinewordle|crossword|frame|cryptic|emoji|timeline|higher|degrees)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
+  { re: /^\/games\/(cinewordle|crossword|weekend|frame|cryptic|emoji|timeline|higher|degrees)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
   // CineQuiz: /games/quiz, /games/quiz/c/<id>, /games/quiz/room/<id>, /games/quiz/join/<code>
   // Poster Reveal and CinePictionary rooms: /games/poster, /games/poster/room/<id>, /games/poster/join/<code>
   { re: /^\/games\/(poster|pictionary)(?:\/(room|join)\/([0-9a-f-]{36}|[A-Za-z0-9]{4,12}))?$/i, view: roomGameView, nav: 'games', title: 'nav.games' },
@@ -63,7 +63,7 @@ function gameView(game, practice, challengeId) {
                 ? import('./games/degrees.js').then((m) => m.degreesPage(mode, challengeId))
                 : g === 'higher'
                 ? import('./games/higher.js').then((m) => m.higherPage(challengeId ? 'challenge' : 'practice', challengeId))
-                : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
+                : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId, g === 'weekend' ? 'weekend' : 'mini'));
   return lazy(load);
 }
 

@@ -1271,7 +1271,7 @@ a.link-btn { color: var(--muted); }
 .clue-text { flex: 1; background: none; border: 0; color: var(--cream); text-align: left; font: 500 15px var(--body); cursor: pointer; padding: 6px; }
 .clue-text b { color: var(--gold-2); margin-right: 6px; }
 .mini-grid { display: grid; gap: 3px; background: #0a0607; padding: 3px; border-radius: 8px; user-select: none; }
-.mini-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+.mini-row { display: grid; grid-template-columns: repeat(var(--n, 5), 1fr); gap: 3px; }
 .cell {
   position: relative;
   aspect-ratio: 1;
@@ -1585,3 +1585,15 @@ a.link-btn { color: var(--muted); }
 .px-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .px-color { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; background: var(--c); cursor: pointer; }
 .px-color.on { border-color: var(--cream); box-shadow: 0 0 0 2px var(--bg); }
+
+/* ---------- Phase 3c: Weekend 11x11 crossword ---------- */
+.weekend .mini-main { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); }
+.weekend .mini-grid, .weekend .mini-row { gap: 2px; }
+.weekend .mini-grid { padding: 2px; }
+.weekend .cell { font-size: clamp(15px, 4.6vw, 28px); }
+.weekend .cell .num { font-size: clamp(7px, 1.9vw, 10px); top: 1px; left: 2px; }
+.weekend .cell .ltr { padding-top: 2px; }
+@media (max-width: 760px) {
+  .weekend .mini-main { grid-template-columns: 1fr; }
+  .weekend .mini-left { max-width: 560px; }
+}
