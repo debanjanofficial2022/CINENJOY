@@ -1498,3 +1498,28 @@ a.link-btn { color: var(--muted); }
 .frame-suggest li.on, .frame-suggest li:hover { background: rgba(242, 194, 90, 0.14); }
 .frame-guesses { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 4px; max-width: 760px; font-size: 14.5px; }
 .frame-guesses li { padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.03); }
+
+/* ---------- Phase 2d: Minute Cryptic and Movie Impostor ---------- */
+.cryptic-card { max-width: 640px; padding: 18px; border-radius: var(--radius); border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); margin-bottom: 16px; }
+.cryptic-clue { font: 500 clamp(20px, 5vw, 26px) / 1.4 Georgia, 'Times New Roman', serif; margin: 6px 0 10px; color: var(--cream); }
+.cryptic-def { text-decoration-color: var(--gold); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.cryptic-time { margin: 0; font-variant-numeric: tabular-nums; color: var(--gold); font-weight: 600; }
+.cryptic-tiles { margin-bottom: 12px; }
+.cryptic-hints { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 6px; max-width: 640px; font-size: 14.5px; }
+.cryptic-hints li { padding: 8px 12px; border-radius: 10px; background: rgba(242, 194, 90, 0.08); }
+.kb-wrap[hidden] { display: none !important; }
+
+.imp-body { max-width: 680px; display: grid; gap: 12px; }
+.imp-rules { padding-left: 20px; line-height: 1.6; color: var(--text); max-width: 640px; }
+.imp-card { padding: 16px 18px; border-radius: var(--radius); border: 1px solid var(--gold); background: linear-gradient(135deg, rgba(134, 21, 39, 0.35), rgba(242, 194, 90, 0.08)); }
+.imp-card.is-impostor { border-color: #e0525e; background: linear-gradient(135deg, rgba(224, 82, 94, 0.25), rgba(0, 0, 0, 0.2)); }
+.imp-card.is-watch { border-style: dashed; }
+.imp-card p { margin: 4px 0; }
+.imp-title, .imp-role { font: 400 clamp(28px, 7vw, 38px) / 1.05 var(--display); color: var(--gold-2); letter-spacing: 0.02em; }
+.imp-step { font-weight: 600; margin: 4px 0 0; }
+.imp-form { display: flex; gap: 8px; }
+.imp-form input { flex: 1; font-size: 16px; }
+.imp-clues { width: 100%; border-collapse: collapse; font-size: 15px; }
+.imp-clues th, .imp-clues td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.imp-clues thead th { color: var(--muted); font-weight: 500; font-size: 13px; }
+.imp-votes { display: flex; flex-wrap: wrap; gap: 8px; }
