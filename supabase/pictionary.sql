@@ -1,4 +1,4 @@
--- CINENJOY database, Phase 3 step b: CinePictionary. Uses room_secrets and
+-- CINEJOY database, Phase 3 step b: CinePictionary. Uses room_secrets and
 -- room_answers from secrets.sql. The drawer's card holds the title; guesses are
 -- checked by the database, so nobody else can read the answer early.
 -- Safe to run more than once.

@@ -6,7 +6,7 @@ const net = require('net');
 
 const MAX_BYTES = 3_000_000;
 const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36 CINENJOY-link-import';
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36 CINEJOY-link-import';
 
 class ImportError extends Error {
   constructor(code) {

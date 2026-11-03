@@ -1,4 +1,4 @@
--- CINENJOY database, Phase 2 steps c and d (and Phase 3 room games):
+-- CINEJOY database, Phase 2 steps c and d (and Phase 3 room games):
 -- moves players make in a room (quiz answers, clues, votes, guesses), and the
 -- new games in game results and challenge links. Safe to run more than once.
 

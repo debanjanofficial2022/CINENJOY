@@ -1,4 +1,4 @@
--- CINENJOY database, Phase 2 step b: friend rooms and Movie Night.
+-- CINEJOY database, Phase 2 step b: friend rooms and Movie Night.
 -- A room is private: you get in with its code or invite link. Everything in it
 -- is visible only to the people in it. Safe to run more than once.
 

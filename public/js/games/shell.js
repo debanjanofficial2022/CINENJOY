@@ -7,7 +7,7 @@ import { track } from '../loading.js';
 import { esc, el, frag, toast, openSheet } from '../ui.js';
 import {
   todayKey, dayNumber, hashString, rng, shuffle, msToMidnight, fmtCountdown,
-  loadState, saveState, ensureName, stats, statsHtml, share, challengeUrl, boardHtml,
+  loadState, saveState, nextPractice, ensureName, stats, statsHtml, share, challengeUrl, boardHtml,
 } from './common.js';
 
 /**
@@ -44,8 +44,11 @@ export function puzzlePage(spec, mode = 'daily', challengeId) {
         ${mode !== 'daily' ? `<a class="link-btn" href="${spec.path}" data-link>${esc(t('play.daily'))}</a>` : ''}
         ${mode !== 'practice' ? `<a class="link-btn" href="${spec.path}/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
         <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
+        ${mode === 'practice' ? `<button type="button" class="link-btn" data-new>⟳ ${esc(t('play.newPuzzle'))}</button>` : ''}
       </div>`),
     );
+    const nb = head.querySelector('[data-new]');
+    if (nb) nb.addEventListener('click', () => startPractice(true));
     head.querySelector('[data-help]').addEventListener('click', () => openSheet({ title: t('play.howToPlay'), body: el(`<div class="help">${spec.help()}</div>`) }));
     head.querySelector('[data-stats]').addEventListener('click', async () => {
       const results = await track(db.myResults(spec.game)).catch(() => []);
@@ -102,7 +105,7 @@ export function puzzlePage(spec, mode = 'daily', challengeId) {
     if (sum.card) box.querySelector('[data-card]').append(sum.card);
     const close = openSheet({ title: spec.name(), body: box });
     box.querySelectorAll('a[data-link]').forEach((a) => a.addEventListener('click', () => close()));
-    const top = mode === 'daily' ? `CINENJOY ${spec.name()} #${dayNumber()}` : `CINENJOY ${spec.name()}`;
+    const top = mode === 'daily' ? `CINEJOY ${spec.name()} #${dayNumber()}` : `CINEJOY ${spec.name()}`;
     box.querySelector('[data-share]').addEventListener('click', () =>
       share(`${top} ${s.won ? fmt(s.score) : 'X'}\n${sum.line}`, mode === 'challenge' ? challengeUrl(spec.game, ctx.challenge.id) : `${location.origin}${spec.path}`),
     );
@@ -157,10 +160,7 @@ export function puzzlePage(spec, mode = 'daily', challengeId) {
   function startPractice(fresh = false) {
     let saved = loadState(`${spec.game}:practice-current`);
     if (fresh || !saved || saved.puzzle == null || saved.puzzle >= spec.count) {
-      const avoid = daily();
-      let i;
-      do i = Math.floor(Math.random() * spec.count);
-      while (i === avoid && spec.count > 1);
+      const i = nextPractice(spec.game, spec.count, daily());
       saved = { puzzle: i, key: `p-${i}-${Date.now().toString(36)}` };
       saveState(`${spec.game}:practice-current`, saved);
     }

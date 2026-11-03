@@ -7,6 +7,7 @@ import * as db from '../data.js';
 import { track } from '../loading.js';
 import { esc, el, frag, toast } from '../ui.js';
 import { FRAMES } from './frame-data.js';
+import { botsOffer } from './roomkit.js';
 import { createRoom, joinRoom, getRoom, roomPeople, patchRoom, liveRoom, whilePresent, ensureRoomName, me, isRude, clean } from '../rooms.js';
 
 const CLUE_ROUNDS = 2;
@@ -27,7 +28,8 @@ export function impostorHome() {
       <div class="game-title-row"><h1>${esc(t('imp2.name'))}</h1><span class="chip">${esc(t('modes.room'))}</span></div></header>
     <p class="lead">${esc(t('imp2.lead'))}</p>
     <ol class="imp-rules"><li>${esc(t('imp2.rule1'))}</li><li>${esc(t('imp2.rule2'))}</li><li>${esc(t('imp2.rule3'))}</li><li>${esc(t('imp2.rule4'))}</li></ol>
-    <div class="row-start quiz-start"><button class="btn" type="button" data-new>👥 ${esc(t('imp2.newRoom'))}</button></div>
+    <div class="row-start quiz-start"><button class="btn" type="button" data-new>👥 ${esc(t('imp2.newRoom'))}</button>
+      <a class="btn btn-ghost" href="/games/impostor/practice" data-link>🤖 ${esc(t('bots.practice'))}</a></div>
     <form class="join-form quiz-join"><input type="text" maxlength="120" placeholder="${esc(t('mn.codePlaceholder'))}" aria-label="${esc(t('imp2.join'))}" />
       <button class="btn btn-ghost" type="submit">${esc(t('wl.joinBtn'))}</button></form>
   </section>`);
@@ -250,7 +252,8 @@ export function impostorRoom(roomId) {
         <div class="row-end"><button class="btn btn-ghost" type="button" data-copy>${esc(t('wl.copyLink'))}</button></div></div>
         <h2 class="group-title">${esc(t('quiz.players', { n: people.length }))}</h2>
         <div class="board-list">${people.map((p) => `<div class="board-row${p.me ? ' is-me' : ''}"><span class="board-name">${esc(nameOf(p.user_id))}${online.has(p.user_id) ? ' <span class="dot-on">●</span>' : ''}</span></div>`).join('')}</div>
-        ${isHost() ? `<button class="btn" type="button" data-deal ${people.length < 3 ? 'disabled' : ''}>▶ ${esc(t('imp2.start'))}</button>${people.length < 3 ? `<p class="muted">${esc(t('imp2.needThree'))}</p>` : ''}` : `<p class="muted">${esc(t('quiz.waitHost'))}</p>`}`;
+        ${isHost() ? `<button class="btn" type="button" data-deal ${people.length < 3 ? 'disabled' : ''}>▶ ${esc(t('imp2.start'))}</button>${people.length < 3 ? `<p class="muted">${esc(t('imp2.needThree'))}</p>` : ''}` : `<p class="muted">${esc(t('quiz.waitHost'))}</p>`}
+        ${people.length < 3 ? botsOffer('/games/impostor') : ''}`;
     } else {
       html = cardHtml();
       if (s.phase === 'clues') {

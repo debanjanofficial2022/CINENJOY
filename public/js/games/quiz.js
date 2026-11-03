@@ -307,7 +307,7 @@ export function quizPage(mode = 'practice', challengeId) {
           .join('')}</ol>
       </div>`),
     );
-    const shareText = `CINENJOY CineQuiz ${right}/${qs.length} · ${score} ${t('quiz.points')}\n${answers.map((a) => (a.correct ? '🟩' : '🟥')).join('')}`;
+    const shareText = `CINEJOY CineQuiz ${right}/${qs.length} · ${score} ${t('quiz.points')}\n${answers.map((a) => (a.correct ? '🟩' : '🟥')).join('')}`;
     body.querySelector('[data-share]').addEventListener('click', () =>
       share(shareText, mode === 'challenge' ? challengeUrl('quiz', challenge.id) : `${location.origin}/games/quiz`),
     );

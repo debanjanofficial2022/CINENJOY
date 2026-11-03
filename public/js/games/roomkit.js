@@ -14,7 +14,8 @@ export function roomHome({ kind, name, lead, rules = [], path, state = { phase: 
       <div class="game-title-row"><h1>${esc(name)}</h1><span class="chip">${esc(t('modes.room'))}</span></div></header>
     <p class="lead">${esc(lead)}</p>
     ${rules.length ? `<ol class="imp-rules">${rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>` : ''}
-    <div class="row-start quiz-start"><button class="btn" type="button" data-new>👥 ${esc(t('imp2.newRoom'))}</button></div>
+    <div class="row-start quiz-start"><button class="btn" type="button" data-new>👥 ${esc(t('imp2.newRoom'))}</button>
+      <a class="btn btn-ghost" href="${path}/practice" data-link>🤖 ${esc(t('bots.practice'))}</a></div>
     <form class="join-form quiz-join"><input type="text" maxlength="120" placeholder="${esc(t('mn.codePlaceholder'))}" aria-label="${esc(t('imp2.join'))}" />
       <button class="btn btn-ghost" type="submit">${esc(t('wl.joinBtn'))}</button></form>
   </section>`);
@@ -38,6 +39,11 @@ export function roomHome({ kind, name, lead, rules = [], path, state = { phase: 
     if (code) go(`${path}/join/${code}`);
   });
   return node;
+}
+
+/** Shown in a room lobby while there aren't enough players yet. */
+export function botsOffer(path) {
+  return `<div class="bots-offer"><p class="muted">${esc(t('bots.inLobby'))}</p><a class="btn btn-ghost" href="${path}/practice" data-link>🤖 ${esc(t('bots.practice'))}</a></div>`;
 }
 
 export function roomJoin(path, code) {
@@ -124,13 +130,14 @@ export function liveGame(node, roomId, { onLoad, onMessage, kinds }) {
       const p = r.people.find((x) => x.user_id === id);
       return (p && p.name) || t('wl.friend');
     },
-    lobbyHtml(path, canStart, startLabel, note = '') {
+    lobbyHtml(path, canStart, startLabel, note = '', minPlayers = 2) {
       const link = `${location.origin}${path}/join/${r.room.code}`;
       return `<div class="share-box form"><label class="field"><span>${esc(t('wl.inviteLink'))}</span><input type="text" readonly value="${esc(link)}" /></label>
         <div class="row-end"><button class="btn btn-ghost" type="button" data-copy="${esc(link)}">${esc(t('wl.copyLink'))}</button></div></div>
         <h2 class="group-title">${esc(t('quiz.players', { n: r.people.length }))}</h2>
         <div class="board-list">${r.people.map((p) => `<div class="board-row${p.me ? ' is-me' : ''}"><span class="board-name">${esc(api.nameOf(p.user_id))}${r.online.has(p.user_id) ? ' <span class="dot-on">●</span>' : ''}</span></div>`).join('')}</div>
-        ${r.room.host_id === r.uid ? `<button class="btn" type="button" data-start ${canStart ? '' : 'disabled'}>▶ ${esc(startLabel)}</button>${note ? `<p class="muted">${esc(note)}</p>` : ''}` : `<p class="muted">${esc(t('quiz.waitHost'))}</p>`}`;
+        ${r.room.host_id === r.uid ? `<button class="btn" type="button" data-start ${canStart ? '' : 'disabled'}>▶ ${esc(startLabel)}</button>${note ? `<p class="muted">${esc(note)}</p>` : ''}` : `<p class="muted">${esc(t('quiz.waitHost'))}</p>`}
+        ${r.people.length < minPlayers ? botsOffer(path) : ''}`;
     },
     wireCopy(box) {
       box.querySelectorAll('[data-copy]').forEach((b) =>

@@ -247,7 +247,7 @@ function shareInvite(room) {
     }
   });
   const native = box.querySelector('[data-native]');
-  if (native) native.addEventListener('click', () => navigator.share({ title: 'CINENJOY', text: t('mn.shareText', { name: room.title || t('mn.title') }), url: link }).catch(() => {}));
+  if (native) native.addEventListener('click', () => navigator.share({ title: 'CINEJOY', text: t('mn.shareText', { name: room.title || t('mn.title') }), url: link }).catch(() => {}));
 }
 
 // ---------- Join by link ----------

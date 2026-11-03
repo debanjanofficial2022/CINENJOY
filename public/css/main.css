@@ -1,4 +1,4 @@
-/* CINENJOY — dark cinema theatre: velvet, marquee lights, ticket stubs */
+/* CINEJOY — dark cinema theatre: velvet, marquee lights, ticket stubs */
 
 :root {
   --bg: #0d0809;
@@ -197,7 +197,16 @@ a {
 }
 
 .tile {
-  transition: opacity 0.25s, box-shadow 0.25s, background 0.25s, color 0.25s;
+  transition: opacity 0.25s, box-shadow 0.25s, background 0.25s, color 0.25s, width 0.3s ease, margin 0.3s ease;
+}
+/* The second N's slot is closed at rest, so the logo reads CINEJOY */
+.logo .tile.shut {
+  width: 0;
+  margin-left: calc(var(--t) * -0.1);
+  padding: 0;
+  overflow: hidden;
+  opacity: 0 !important;
+  box-shadow: none !important;
 }
 
 .logo[data-phase='cine'] .tile:nth-child(-n + 4),
@@ -255,18 +264,19 @@ a {
 .logo[data-phase='enjoy'] .tile:nth-child(-n + 3) {
   opacity: 0 !important;
   transform: scale(0.6);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition: opacity 0.15s ease, transform 0.2s ease;
 }
+/* The projector is up the moment the N jumps: no fade-in delay */
 .logo[data-phase='enjoy'] .projector {
   opacity: 1;
   transform: none;
-  transition: opacity 0.5s ease, transform 0.55s cubic-bezier(.2,.8,.3,1);
+  transition: opacity 0.12s linear, transform 0.25s cubic-bezier(.2,.8,.3,1);
 }
 .logo[data-phase='enjoy'] .beam {
   opacity: 1;
   transform: scaleX(1);
-  transition: opacity 0.35s ease 0.45s, transform 0.45s cubic-bezier(.2,.8,.3,1) 0.45s;
-  animation: beam-flicker 0.18s steps(2) 0.9s infinite;
+  transition: opacity 0.2s ease 0.12s, transform 0.35s cubic-bezier(.2,.8,.3,1) 0.12s;
+  animation: beam-flicker 0.18s steps(2) 0.6s infinite;
 }
 .logo[data-phase='enjoy'] .reel { animation: reel-spin 1.1s linear infinite; }
 .logo[data-phase='enjoy'] .reel-b { animation-duration: 0.8s; }
@@ -1585,3 +1595,6 @@ a.link-btn { color: var(--muted); }
 .px-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .px-color { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; background: var(--c); cursor: pointer; }
 .px-color.on { border-color: var(--cream); box-shadow: 0 0 0 2px var(--bg); }
+
+/* Practice with bots: the offer in a room lobby */
+.bots-offer { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); display: grid; gap: 8px; justify-items: start; }
