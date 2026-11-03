@@ -21,10 +21,10 @@ function section(cls, inner) {
 const GAMES = [
   { id: 'cinewordle', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/cinewordle' },
   { id: 'crossword', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/crossword' },
-  { id: 'cryptic', modes: ['daily', 'challenge'], phase: 2 },
+  { id: 'cryptic', modes: ['daily', 'practice', 'challenge'], phase: 2, href: '/games/cryptic' },
   { id: 'quiz', modes: ['practice', 'room', 'challenge'], phase: 2, href: '/games/quiz' },
   { id: 'frame', modes: ['daily', 'practice', 'challenge'], phase: 2, href: '/games/frame' },
-  { id: 'impostor', modes: ['room'], phase: 2 },
+  { id: 'impostor', modes: ['room'], phase: 2, href: '/games/impostor' },
   { id: 'pictionary', modes: ['room'], phase: 3 },
   { id: 'emoji', modes: ['daily', 'practice', 'challenge'], phase: 3 },
   { id: 'degrees', modes: ['daily', 'practice', 'challenge'], phase: 3 },

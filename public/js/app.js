@@ -26,8 +26,10 @@ const patterns = [
   { re: /^\/lobby\/movie-night\/join\/([A-Za-z0-9]{4,12})$/, view: movieNightJoinPage, nav: 'lobby', title: 'mn.title' },
   { re: /^\/lobby\/movie-night\/([0-9a-f-]{36})$/i, view: movieNightPage, nav: 'lobby', title: 'mn.title' },
   // /games/cinewordle, /games/cinewordle/practice, /games/cinewordle/c/<challenge id>; same for crossword
-  { re: /^\/games\/(cinewordle|crossword|frame)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
+  { re: /^\/games\/(cinewordle|crossword|frame|cryptic)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
   // CineQuiz: /games/quiz, /games/quiz/c/<id>, /games/quiz/room/<id>, /games/quiz/join/<code>
+  // Movie Impostor: /games/impostor, /games/impostor/room/<id>, /games/impostor/join/<code>
+  { re: /^\/games\/impostor(?:\/(room|join)\/([0-9a-f-]{36}|[A-Za-z0-9]{4,12}))?$/i, view: impostorView, nav: 'games', title: 'nav.games' },
   { re: /^\/games\/quiz(?:\/(c|room|join)\/([0-9a-f-]{36}|[A-Za-z0-9]{4,12}))?$/i, view: quizView, nav: 'games', title: 'nav.games' },
 ];
 
@@ -49,7 +51,9 @@ function gameView(game, practice, challengeId) {
       ? import('./games/wordle.js').then((m) => m.wordlePage(mode, challengeId))
       : g === 'frame'
         ? import('./games/frame.js').then((m) => m.framePage(mode, challengeId))
-        : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
+        : g === 'cryptic'
+          ? import('./games/cryptic.js').then((m) => m.crypticPage(mode, challengeId))
+          : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
   return lazy(load);
 }
 
@@ -59,6 +63,10 @@ function quizView(kind, value) {
       kind === 'room' ? m.quizRoomPage(value) : kind === 'join' ? m.quizJoinPage(value) : m.quizPage(kind === 'c' ? 'challenge' : 'practice', value),
     ),
   );
+}
+
+function impostorView(kind, value) {
+  return lazy(import('./games/impostor.js').then((m) => (kind === 'room' ? m.impostorRoom(value) : kind === 'join' ? m.impostorJoin(value) : m.impostorHome())));
 }
 
 function lazy(load) {
