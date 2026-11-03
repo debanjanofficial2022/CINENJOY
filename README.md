@@ -21,6 +21,13 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | d | Minute Cryptic and Movie Impostor | Done |
 | e | Instagram and TikTok import | On hold (owner's decision) |
 
+| Phase 3 step | What | State |
+| --- | --- | --- |
+| a | Emoji Plot, Timeline, Higher or Lower | Done |
+| b | Six Degrees, Poster Reveal, CinePictionary | Next |
+| c | Weekend 11x11 crossword | To do |
+| d | Lobby: Explore and CineHistory; badges; year in review | To do |
+
 ## How it is built
 
 - **Static site, no build step.** Plain HTML, CSS and JavaScript modules in `public/`. Vercel serves the folder as it is.
@@ -74,6 +81,10 @@ vercel.json             Vercel settings
 - **Frame Guess** (`js/games/frame.js`, `/games/frame`): name the title from a still with no text on it. It starts zoomed in and blurred; each wrong guess or skip shows more. Guesses are picked from a TMDB search. The 302 titles (`frame-data.js`) are well-known films and series with 2,500+ votes.
 - **Minute Cryptic** (`js/games/cryptic.js`, `/games/cryptic`): one cryptic clue a day, in English. The definition describes a well-known title ("Ridley Scott's 1979 film"); the wordplay is an anagram or a hidden word made from common English words (`cryptic-data.js`, 85 clues generated once and checked by hand). Three staged hints (definition, wordplay, first letter); the score is your time plus 20 seconds a hint and 10 a wrong answer.
 - **Movie Impostor** (`js/games/impostor.js`, `/games/impostor`): a friend-room game for 3 or more. The database function `deal_impostor` picks the title and the impostor, so not even the host knows; each player can read only their own card (`room_secrets`). Two rounds of one-word clues (word filter, no words from the title), a vote, and a last guess for a caught impostor.
+- **Emoji Plot** (`js/games/emoji.js`, `emoji-data.js`): name the title from emojis written by hand for 170 well-known titles; three tries, with the year and then the type and first letter as hints.
+- **Timeline** (`js/games/timeline.js`): put five well-known titles in release order; three checks, and titles in the right place lock in green.
+- **Higher or Lower** (`js/games/higher.js`): rating, box office, running time or episode count, from TMDB. Practice is an endless streak; a challenge link stores one 25-title run so friends get the same questions.
+- The smaller daily games share one frame (`js/games/shell.js`) for daily, practice and challenge puzzles, saving and the result sheet.
 - Results, streaks and stats are saved to the visitor's account (`game_results`, `challenges`, `challenge_results` in `supabase/games.sql`).
 - **Games data** (`js/games/wordle-data.js`, `crossword-data.js`) was generated once from TMDB top-rated titles (11,600 films and series) and a list of common English words (google-10000-english). Answers are kept in the files so the daily puzzles stay the same for everyone.
 
