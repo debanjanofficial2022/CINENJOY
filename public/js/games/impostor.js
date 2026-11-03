@@ -91,6 +91,10 @@ export function impostorRoom(roomId) {
     const p = people.find((x) => x.user_id === id);
     return p ? (p.me ? t('wl.you') : p.name || t('wl.friend')) : t('wl.friend');
   };
+  const plainName = (id) => {
+    const p = people.find((x) => x.user_id === id);
+    return (p && p.name) || t('wl.friend');
+  };
   const movesOf = (kind, round) => moves.filter((m) => m.kind === kind && m.round === round);
 
   async function load(first) {
@@ -268,9 +272,9 @@ export function impostorRoom(roomId) {
         html += cluesHtml();
         const tally = votesTally();
         html += `<div class="board-list">${players
-          .map((p) => `<div class="board-row${answer && answer.impostor === p ? ' is-me' : ''}"><span class="board-name">${esc(nameOf(p))}${answer && answer.impostor === p ? ' 🕵️' : ''}</span><span class="board-score">${tally.get(p) || 0} ${esc(t('imp2.votes'))}</span></div>`)
+          .map((p) => `<div class="board-row${answer && answer.impostor === p ? ' is-me' : ''}"><span class="board-name">${esc(nameOf(p))}${answer && answer.impostor === p ? ' 🕵️' : ''}</span><span class="board-score">🗳 ${tally.get(p) || 0}</span></div>`)
           .join('')}</div>`;
-        if (answer) html += `<p class="imp-step">${esc(t('imp2.itWas', { name: nameOf(answer.impostor), title: answer.title.title }))}</p>`;
+        if (answer) html += `<p class="imp-step">${esc(t('imp2.itWas', { name: plainName(answer.impostor), title: answer.title.title }))}</p>`;
         if (s.phase === 'reveal') html += `<p class="muted">${esc(caught() ? t('imp2.caught') : t('imp2.escaped'))}</p>`;
         if (s.phase === 'guess') {
           const g = movesOf('guess', s.round * 10)[0];
@@ -278,13 +282,13 @@ export function impostorRoom(roomId) {
             html += `<p class="imp-step">${esc(t('imp2.lastChance'))}</p><div class="imp-votes">${card.choices
               .map((c, i) => `<button class="btn btn-ghost" type="button" data-guess="${i}">${esc(c.title)} <span class="muted">${esc(c.year)}</span></button>`)
               .join('')}</div>`;
-          else html += `<p class="muted">${esc(t('imp2.guessing', { name: answer ? nameOf(answer.impostor) : '' }))}</p>`;
+          else html += `<p class="muted">${esc(t('imp2.guessing', { name: answer ? plainName(answer.impostor) : '' }))}</p>`;
         }
         if (s.phase === 'over' && answer) {
           const g = movesOf('guess', s.round * 10)[0];
           const stole = g && g.data.title === answer.title.title;
           const crewWins = caught() && !stole;
-          html += `<p class="result-head">${esc(crewWins ? t('imp2.crewWins') : stole ? t('imp2.stole', { name: nameOf(answer.impostor) }) : t('imp2.impostorWins', { name: nameOf(answer.impostor) }))}</p>`;
+          html += `<p class="result-head">${esc(crewWins ? t('imp2.crewWins') : stole ? t('imp2.stole', { name: plainName(answer.impostor) }) : t('imp2.impostorWins', { name: plainName(answer.impostor) }))}</p>`;
           if (isHost()) html += `<button class="btn" type="button" data-deal>▶ ${esc(t('imp2.next'))}</button>`;
           if (saved !== s.round && inRound) {
             saved = s.round;
