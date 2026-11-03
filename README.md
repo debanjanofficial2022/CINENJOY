@@ -25,8 +25,8 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | --- | --- | --- |
 | a | Emoji Plot, Timeline, Higher or Lower | Done |
 | b | Six Degrees, Poster Reveal, CinePictionary | Done |
-| c | Weekend 11x11 crossword | Next |
-| d | Lobby: Explore and CineHistory; badges; year in review | To do |
+| c | Weekend 11x11 crossword | Done |
+| d | Lobby: Explore and CineHistory; badges; year in review | Next |
 
 ## How it is built
 
@@ -77,6 +77,7 @@ vercel.json             Vercel settings
 
 - **CineWordle** (`js/games/wordle.js`): guess a 5 or 6 letter title in six tries; one hint per game (year, type, genre or lead actor), marked in the score. The answers are well-known one-word titles from TMDB's top-rated films and series; guesses must be common English words or answers.
 - **Daily Mini** (`js/games/crossword.js`, `crossword-gen.js`): a 5x5 American-style crossword, every square in an across and a down word. Every answer is a real title, clued from its details ("1979 science fiction film directed by Ridley Scott"), or a word from a well-known title, clued as a blank ("The Dark Knight ___", 2012 film). Clues are written in the site language. Check adds 3 seconds per letter, Reveal 15.
+- **Weekend Crossword** (`/games/weekend`, same code as the Mini with `generateFree` in `crossword-gen.js`): an 11x11 freestyle grid of 14 to 22 answers, each crossing another. Besides the Mini's words it uses CineWordle titles and well-known titles run together ("LALALAND", clued with word lengths "(2,2,4)" and details fetched from TMDB). A new puzzle every Saturday.
 - **Daily** puzzles are the same for everyone on a given local date (#1 is 31 October 2026), built from a seeded shuffle. **Practice** is unlimited. **Challenge links** store the exact puzzle in Supabase so friends play the same one and see each other's scores.
 - **CineQuiz** (`js/games/quiz.js`, `/games/quiz`): ten multiple-choice questions written on the spot from TMDB details: release year, director or creator, lead actor, plot (title hidden) and tagline. Practice filters: difficulty (how well known the titles are), type, language and country. 15 seconds a question; a right answer scores 500 plus up to 500 for speed. **Friend rooms** (`/games/quiz/room/…`): the host's page runs the game, answers go into `room_moves`, and everyone sees the board live. **Challenge links** store the question set.
 - **Frame Guess** (`js/games/frame.js`, `/games/frame`): name the title from a still with no text on it. It starts zoomed in and blurred; each wrong guess or skip shows more. Guesses are picked from a TMDB search. The 302 titles (`frame-data.js`) are well-known films and series with 2,500+ votes.
