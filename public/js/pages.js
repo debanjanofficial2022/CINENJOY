@@ -26,10 +26,10 @@ const GAMES = [
   { id: 'frame', modes: ['daily', 'practice', 'challenge'], phase: 2, href: '/games/frame' },
   { id: 'impostor', modes: ['room'], phase: 2, href: '/games/impostor' },
   { id: 'pictionary', modes: ['room'], phase: 3 },
-  { id: 'emoji', modes: ['daily', 'practice', 'challenge'], phase: 3 },
+  { id: 'emoji', modes: ['daily', 'practice', 'challenge'], phase: 3, href: '/games/emoji' },
   { id: 'degrees', modes: ['daily', 'practice', 'challenge'], phase: 3 },
-  { id: 'higher', modes: ['practice', 'challenge'], phase: 3 },
-  { id: 'timeline', modes: ['daily', 'practice', 'challenge'], phase: 3 },
+  { id: 'higher', modes: ['practice', 'challenge'], phase: 3, href: '/games/higher' },
+  { id: 'timeline', modes: ['daily', 'practice', 'challenge'], phase: 3, href: '/games/timeline' },
   { id: 'poster', modes: ['room'], phase: 3 },
 ];
 

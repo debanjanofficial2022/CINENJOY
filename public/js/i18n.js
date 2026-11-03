@@ -132,7 +132,7 @@ const dict = {
       },
     },
     play: {
-      keyboard: 'Keyboard', enter: 'Enter', backspace: 'Delete letter', board: 'Guesses',
+      solved: 'Solved!', notThisTime: 'Not this time.', keyboard: 'Keyboard', enter: 'Enter', backspace: 'Delete letter', board: 'Guesses',
       daily: 'Daily', dailyN: 'Daily #{n}', practice: 'Practice', challenge: 'Challenge', howToPlay: 'How to play', stats: 'Stats',
       played: 'Played', winPct: 'Win %', streak: 'Streak', bestStreak: 'Best streak', distribution: 'Guesses per win',
       seeResult: 'See result', shareResult: 'Share result', challengeFriend: 'Challenge a friend', playPractice: 'Play practice',
@@ -244,6 +244,26 @@ const dict = {
       itWas: 'The impostor was {name}. The title: {title}.', caught: 'Caught!', escaped: 'The impostor got away.', lastChance: "You've been caught. One guess: which title was it?",
       guessing: '{name} is guessing the title…', crewWins: 'The crew wins!', stole: '{name} was caught but guessed the title: the impostor wins!', impostorWins: '{name} fooled everyone: the impostor wins!',
       next: 'Next round', moveOn: "Don't wait any longer", rude: 'Please choose another word.', tooEasy: "That's a word from the title. Try a harder clue.",
+    },
+    ep: {
+      name: 'Emoji Plot', clueLabel: 'The emoji clue', starts: 'starts with {l}',
+      help1: 'Name the film or series from the emojis. Pick your guess from the list as you type.',
+      help2: 'You have three tries. A wrong guess or skip shows a hint: first the year, then the type and first letter.',
+    },
+    tl: {
+      name: 'Timeline', lead: 'Put these in release order, oldest first. Use the arrows, or tap two titles to swap them.', doneLead: 'In release order:',
+      oldest: 'Oldest', newest: 'Newest', up: 'Move up', down: 'Move down', check: 'Check ({n} left)',
+      won: 'In order in {n}!', lost: 'Here is the right order.',
+      help1: 'Five well-known films and series. Put them in the order they came out (for a series, its first season).',
+      help2: 'You have three checks. Titles in the right place turn green and stay put.',
+    },
+    hl: {
+      name: 'Higher or Lower', streak: 'Streak: {n}', wrong: 'Wrong! The streak ends here.', minutes: '{n} min', episodes: '{n} episodes',
+      q: { rating: 'Is it rated higher or lower than {a}?', revenue: 'Did it earn more or less than {a}?', runtime: 'Is it longer or shorter than {a}?', episodes: 'Does it have more or fewer episodes than {a}?' },
+      more: { rating: 'Higher', revenue: 'More', runtime: 'Longer', episodes: 'More' },
+      less: { rating: 'Lower', revenue: 'Less', runtime: 'Shorter', episodes: 'Fewer' },
+      over: 'Your streak: {n}', cleared: 'You cleared the whole run: {n}!', challengeRun: 'Challenge friends to a run',
+      challengeIntro: 'A run of {n} questions, the same for everyone with this link. How far can you go?',
     },
     rating: { label: 'Rating', stars: '{n} stars' },
     join: {
@@ -381,7 +401,7 @@ const dict = {
       },
     },
     play: {
-      keyboard: '键盘', enter: '确定', backspace: '删除字母', board: '猜测记录',
+      solved: '解出来了！', notThisTime: '这次没成功。', keyboard: '键盘', enter: '确定', backspace: '删除字母', board: '猜测记录',
       daily: '每日', dailyN: '每日 #{n}', practice: '练习', challenge: '挑战', howToPlay: '玩法', stats: '统计',
       played: '已玩', winPct: '胜率 %', streak: '连胜', bestStreak: '最长连胜', distribution: '每次获胜用的次数',
       seeResult: '查看结果', shareResult: '分享结果', challengeFriend: '挑战好友', playPractice: '练习模式',
@@ -493,6 +513,26 @@ const dict = {
       itWas: '卧底是 {name}。片名是：{title}。', caught: '抓到了！', escaped: '卧底逃脱了。', lastChance: '你被抓到了。猜一次：片名是哪一个？',
       guessing: '{name} 正在猜片名…', crewWins: '平民获胜！', stole: '{name} 被抓到了，但猜对了片名：卧底获胜！', impostorWins: '{name} 骗过了所有人：卧底获胜！',
       next: '下一局', moveOn: '不再等待', rude: '请换一个词。', tooEasy: '这是片名里的词，换个难一点的线索吧。',
+    },
+    ep: {
+      name: '表情剧情', clueLabel: '表情线索', starts: '首字母是 {l}',
+      help1: '根据表情符号猜出电影或剧集。输入时从列表中选择答案。',
+      help2: '你有三次机会。猜错或跳过会给出提示：先是年份，然后是类型和首字母。',
+    },
+    tl: {
+      name: '时间线', lead: '按上映顺序排列，最早的在前。用箭头移动，或依次点两部作品来交换位置。', doneLead: '正确的上映顺序：',
+      oldest: '最早', newest: '最新', up: '上移', down: '下移', check: '检查（剩 {n} 次）',
+      won: '用 {n} 次排对了！', lost: '正确顺序如下。',
+      help1: '五部知名电影和剧集，按它们上映的先后排列（剧集按第一季）。',
+      help2: '你有三次检查机会。位置正确的作品会变绿并固定。',
+    },
+    hl: {
+      name: '谁高谁低', streak: '连胜：{n}', wrong: '错了！连胜到此为止。', minutes: '{n} 分钟', episodes: '{n} 集',
+      q: { rating: '它的评分比《{a}》高还是低？', revenue: '它的票房比《{a}》多还是少？', runtime: '它比《{a}》长还是短？', episodes: '它的集数比《{a}》多还是少？' },
+      more: { rating: '更高', revenue: '更多', runtime: '更长', episodes: '更多' },
+      less: { rating: '更低', revenue: '更少', runtime: '更短', episodes: '更少' },
+      over: '你的连胜：{n}', cleared: '你答完了整组题：{n}！', challengeRun: '向好友发起挑战',
+      challengeIntro: '一组 {n} 道题，拿到这个链接的人题目都一样。你能走多远？',
     },
     rating: { label: '评分', stars: '{n} 星' },
     join: {
@@ -630,7 +670,7 @@ const dict = {
       },
     },
     play: {
-      keyboard: 'Teclado', enter: 'Enviar', backspace: 'Borrar letra', board: 'Intentos',
+      solved: '¡Resuelto!', notThisTime: 'Esta vez no.', keyboard: 'Teclado', enter: 'Enviar', backspace: 'Borrar letra', board: 'Intentos',
       daily: 'Diario', dailyN: 'Diario #{n}', practice: 'Práctica', challenge: 'Reto', howToPlay: 'Cómo se juega', stats: 'Estadísticas',
       played: 'Jugadas', winPct: '% victorias', streak: 'Racha', bestStreak: 'Mejor racha', distribution: 'Intentos por victoria',
       seeResult: 'Ver resultado', shareResult: 'Compartir resultado', challengeFriend: 'Retar a un amigo', playPractice: 'Jugar práctica',
@@ -742,6 +782,26 @@ const dict = {
       itWas: 'El impostor era {name}. El título: {title}.', caught: '¡Atrapado!', escaped: 'El impostor se escapó.', lastChance: 'Te han atrapado. Una oportunidad: ¿qué título era?',
       guessing: '{name} está adivinando el título…', crewWins: '¡Gana el equipo!', stole: '{name} fue atrapado pero adivinó el título: ¡gana el impostor!', impostorWins: '{name} engañó a todos: ¡gana el impostor!',
       next: 'Siguiente ronda', moveOn: 'No esperar más', rude: 'Elige otra palabra, por favor.', tooEasy: 'Esa palabra está en el título. Prueba una pista más difícil.',
+    },
+    ep: {
+      name: 'Trama en emojis', clueLabel: 'La pista en emojis', starts: 'empieza por {l}',
+      help1: 'Adivina la película o serie a partir de los emojis. Elige tu respuesta de la lista mientras escribes.',
+      help2: 'Tienes tres intentos. Un fallo o salto muestra una pista: primero el año, después el tipo y la inicial.',
+    },
+    tl: {
+      name: 'Línea temporal', lead: 'Ordénalos por fecha de estreno, del más antiguo al más reciente. Usa las flechas o toca dos títulos para intercambiarlos.', doneLead: 'Por orden de estreno:',
+      oldest: 'Más antiguo', newest: 'Más reciente', up: 'Subir', down: 'Bajar', check: 'Comprobar (quedan {n})',
+      won: '¡Ordenados en {n}!', lost: 'Este es el orden correcto.',
+      help1: 'Cinco películas y series conocidas. Ordénalas según su estreno (para una serie, su primera temporada).',
+      help2: 'Tienes tres comprobaciones. Los títulos bien colocados se ponen en verde y se quedan fijos.',
+    },
+    hl: {
+      name: 'Más o menos', streak: 'Racha: {n}', wrong: '¡Fallo! Aquí termina la racha.', minutes: '{n} min', episodes: '{n} episodios',
+      q: { rating: '¿Tiene mejor o peor nota que «{a}»?', revenue: '¿Recaudó más o menos que «{a}»?', runtime: '¿Dura más o menos que «{a}»?', episodes: '¿Tiene más o menos episodios que «{a}»?' },
+      more: { rating: 'Mejor', revenue: 'Más', runtime: 'Más larga', episodes: 'Más' },
+      less: { rating: 'Peor', revenue: 'Menos', runtime: 'Más corta', episodes: 'Menos' },
+      over: 'Tu racha: {n}', cleared: '¡Completaste toda la serie: {n}!', challengeRun: 'Retar a tus amigos',
+      challengeIntro: 'Una serie de {n} preguntas, igual para todos con este enlace. ¿Hasta dónde llegas?',
     },
     rating: { label: 'Puntuación', stars: '{n} estrellas' },
     join: {

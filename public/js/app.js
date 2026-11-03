@@ -26,7 +26,7 @@ const patterns = [
   { re: /^\/lobby\/movie-night\/join\/([A-Za-z0-9]{4,12})$/, view: movieNightJoinPage, nav: 'lobby', title: 'mn.title' },
   { re: /^\/lobby\/movie-night\/([0-9a-f-]{36})$/i, view: movieNightPage, nav: 'lobby', title: 'mn.title' },
   // /games/cinewordle, /games/cinewordle/practice, /games/cinewordle/c/<challenge id>; same for crossword
-  { re: /^\/games\/(cinewordle|crossword|frame|cryptic)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
+  { re: /^\/games\/(cinewordle|crossword|frame|cryptic|emoji|timeline|higher)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
   // CineQuiz: /games/quiz, /games/quiz/c/<id>, /games/quiz/room/<id>, /games/quiz/join/<code>
   // Movie Impostor: /games/impostor, /games/impostor/room/<id>, /games/impostor/join/<code>
   { re: /^\/games\/impostor(?:\/(room|join)\/([0-9a-f-]{36}|[A-Za-z0-9]{4,12}))?$/i, view: impostorView, nav: 'games', title: 'nav.games' },
@@ -53,7 +53,13 @@ function gameView(game, practice, challengeId) {
         ? import('./games/frame.js').then((m) => m.framePage(mode, challengeId))
         : g === 'cryptic'
           ? import('./games/cryptic.js').then((m) => m.crypticPage(mode, challengeId))
-          : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
+          : g === 'emoji'
+            ? import('./games/emoji.js').then((m) => m.emojiPage(mode, challengeId))
+            : g === 'timeline'
+              ? import('./games/timeline.js').then((m) => m.timelinePage(mode, challengeId))
+              : g === 'higher'
+                ? import('./games/higher.js').then((m) => m.higherPage(challengeId ? 'challenge' : 'practice', challengeId))
+                : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
   return lazy(load);
 }
 
