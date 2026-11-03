@@ -1491,7 +1491,7 @@ a.link-btn { color: var(--muted); }
 .frame-form { display: flex; gap: 8px; max-width: 760px; margin: 14px 0 6px; }
 .frame-form[hidden] { display: none !important; }
 .frame-input { position: relative; flex: 1; }
-.frame-input input { width: 100%; }
+.frame-input input { width: 100%; font-size: 16px; }
 .frame-suggest { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; border-radius: 12px;
   background: var(--bg-2); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5); }
 .frame-suggest li { padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 14.5px; }

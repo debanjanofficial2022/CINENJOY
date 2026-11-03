@@ -318,7 +318,7 @@ export function quizPage(mode = 'practice', challengeId) {
         ch.disabled = true;
         try {
           await ensureName();
-          const id = await track(db.createChallenge('quiz', { questions: qs, lang: getLang() }, result));
+          const id = await track(db.createChallenge('quiz', { questions: qs, lang: getLang() }, { ...result, won: true }));
           await share(t('play.challengeText', { game: 'CineQuiz' }), challengeUrl('quiz', id));
         } catch (err) {
           console.warn(err);
@@ -330,8 +330,8 @@ export function quizPage(mode = 'practice', challengeId) {
     try {
       if (mode === 'challenge') {
         await ensureName();
-        await db.saveChallengeResult(challenge.id, result);
-        const rows = await db.challengeBoard(challenge.id);
+        await db.saveChallengeResult(challenge.id, { ...result, won: true }); // the board ranks by points
+        const rows = (await db.challengeBoard(challenge.id)).sort((a, b) => (b.score || 0) - (a.score || 0));
         body.querySelector('[data-board]').innerHTML = boardHtml(rows, (r) => `${r.score}`);
       } else {
         await db.saveResult({ game: 'quiz', mode: 'practice', puzzleKey: `q-${Date.now().toString(36)}`, won: result.won, score, detail: { right, n: qs.length, filters } });
