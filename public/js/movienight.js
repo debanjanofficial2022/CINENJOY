@@ -292,6 +292,7 @@ export function movieNightPage(roomId) {
   let uid = null;
   let tab = 'swipe';
   let spinning = false;
+  let lastSpin = '';
   let live = null;
 
   const items = () => (room.state && room.state.items) || [];
@@ -625,7 +626,7 @@ export function movieNightPage(roomId) {
         <p class="muted">${esc(t('mn.spinNote'))}</p>
         <div class="wheel-wrap"><div class="wheel-pointer" aria-hidden="true">▼</div><canvas class="wheel" width="560" height="560" aria-hidden="true"></canvas></div>
         <div class="row-start"><button type="button" class="btn" data-spin>🎡 ${esc(t('mn.spin'))}</button></div>
-        <p class="spin-result" aria-live="polite"></p>
+        <p class="spin-result" aria-live="polite">${esc(lastSpin)}</p>
       </section>`;
     body.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => pickVote(b.dataset.pick)));
     drawWheel(c, 0);
@@ -720,7 +721,8 @@ export function movieNightPage(roomId) {
       else {
         spinning = false;
         const win = options[data.win];
-        if (out) out.textContent = t('mn.wheelSays', { title: win.title });
+        lastSpin = t('mn.wheelSays', { title: win.title });
+        if (out) out.textContent = lastSpin;
         if (mine) choose(win.k);
       }
     };
