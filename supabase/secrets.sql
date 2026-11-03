@@ -1,4 +1,4 @@
--- CINENJOY database, Phase 2 step d: secrets in room games.
+-- CINEJOY database, Phase 2 step d: secrets in room games.
 -- In Movie Impostor everyone but one player sees the secret title. The
 -- database deals the cards, so not even the host knows who the impostor is.
 -- Each player can read only their own card. Safe to run more than once.

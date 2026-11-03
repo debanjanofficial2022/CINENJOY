@@ -1,4 +1,4 @@
-// CINENJOY site shell: routing, language switching, header logo.
+// CINEJOY site shell: routing, language switching, header logo.
 import { t, getLang, setLang, onLangChange } from './i18n.js';
 import { createLogo } from './logo.js';
 import * as pages from './pages.js';
@@ -27,6 +27,8 @@ const patterns = [
   { re: /^\/lobby\/movie-night\/([0-9a-f-]{36})$/i, view: movieNightPage, nav: 'lobby', title: 'mn.title' },
   // /games/cinewordle, /games/cinewordle/practice, /games/cinewordle/c/<challenge id>; same for crossword
   { re: /^\/games\/(cinewordle|crossword|frame|cryptic|emoji|timeline|higher|degrees)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
+  // Practice with bots: /games/impostor/practice, /games/poster/practice, /games/pictionary/practice
+  { re: /^\/games\/(impostor|poster|pictionary)\/practice$/i, view: botsView, nav: 'games', title: 'nav.games' },
   // CineQuiz: /games/quiz, /games/quiz/c/<id>, /games/quiz/room/<id>, /games/quiz/join/<code>
   // Poster Reveal and CinePictionary rooms: /games/poster, /games/poster/room/<id>, /games/poster/join/<code>
   { re: /^\/games\/(poster|pictionary)(?:\/(room|join)\/([0-9a-f-]{36}|[A-Za-z0-9]{4,12}))?$/i, view: roomGameView, nav: 'games', title: 'nav.games' },
@@ -73,6 +75,11 @@ function quizView(kind, value) {
       kind === 'room' ? m.quizRoomPage(value) : kind === 'join' ? m.quizJoinPage(value) : m.quizPage(kind === 'c' ? 'challenge' : 'practice', value),
     ),
   );
+}
+
+function botsView(game) {
+  const g = game.toLowerCase();
+  return lazy(import('./games/bots.js').then((m) => (g === 'impostor' ? m.impostorBots() : g === 'poster' ? m.posterBots() : m.pictionaryBots())));
 }
 
 function impostorView(kind, value) {
@@ -126,7 +133,7 @@ function render({ focus = false } = {}) {
   const path = normalise(location.pathname);
   const route = match(path);
   main.replaceChildren(route ? route.view(...route.args) : pages.notFound());
-  document.title = route && route.title ? `${t(route.title)} · CINENJOY` : 'CINENJOY';
+  document.title = route && route.title ? `${t(route.title)} · CINEJOY` : 'CINEJOY';
   document.querySelectorAll('[data-nav]').forEach((a) => {
     const on = route && a.dataset.nav === route.nav;
     a.classList.toggle('active', Boolean(on));

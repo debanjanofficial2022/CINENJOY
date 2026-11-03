@@ -244,7 +244,7 @@ export function listPage(listId) {
       data = d;
       tags = tg;
       genres = gn;
-      document.title = `${data.list.name} · CINENJOY`;
+      document.title = `${data.list.name} · CINEJOY`;
       renderHead();
       if (!quiet) renderSearch();
       renderToolbar();
@@ -431,7 +431,7 @@ export function listPage(listId) {
       const native = box.querySelector('[data-native]');
       if (native)
         native.addEventListener('click', () =>
-          navigator.share({ title: 'CINENJOY', text: t('wl.shareText', { name: data.list.name }), url: link }).catch(() => {}),
+          navigator.share({ title: 'CINEJOY', text: t('wl.shareText', { name: data.list.name }), url: link }).catch(() => {}),
         );
     } catch (err) {
       console.warn(err);

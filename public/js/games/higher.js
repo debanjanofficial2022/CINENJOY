@@ -162,7 +162,7 @@ export function higherPage(mode = 'practice', challengeId) {
         <button type="button" class="btn btn-ghost" data-again>${esc(t('play.playAgain'))}</button>
       </div><div data-board></div></div>`;
     body.querySelector('[data-share]').addEventListener('click', () =>
-      share(`CINENJOY ${t('hl.name')} 🔥 ${streak}`, mode === 'challenge' ? challengeUrl('higher', challenge.id) : `${location.origin}/games/higher`),
+      share(`CINEJOY ${t('hl.name')} 🔥 ${streak}`, mode === 'challenge' ? challengeUrl('higher', challenge.id) : `${location.origin}/games/higher`),
     );
     body.querySelector('[data-again]').addEventListener('click', () => (mode === 'challenge' ? go('/games/higher') : restart()));
     const ch = body.querySelector('[data-challenge]');

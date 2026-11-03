@@ -47,6 +47,28 @@ export function shuffle(arr, rand) {
   return a;
 }
 
+/**
+ * Practice puzzles come from a shuffled deck kept on this device, so you never
+ * get the same one twice until you have played them all; then a fresh deck
+ * starts. avoid: an index to skip (today's daily puzzle).
+ */
+export function nextPractice(game, count, avoid = -1) {
+  const key = `${game}:deck`;
+  let deck = loadState(key);
+  if (!deck || deck.n !== count || !Array.isArray(deck.left) || !deck.left.length) {
+    deck = { n: count, left: shuffle(Array.from({ length: count }, (_, i) => i), Math.random) };
+    if (count > 1 && deck.left[deck.left.length - 1] === avoid) deck.left.unshift(deck.left.pop());
+  }
+  let i = deck.left.pop();
+  if (i === avoid && deck.left.length) {
+    const j = deck.left.pop();
+    deck.left.unshift(i);
+    i = j;
+  }
+  saveState(key, deck);
+  return i;
+}
+
 export function msToMidnight() {
   const now = new Date();
   const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);

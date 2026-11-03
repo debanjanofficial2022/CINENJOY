@@ -8,7 +8,7 @@ import { esc, el, frag, toast, openSheet } from '../ui.js';
 import { ANSWERS, GUESSES } from './wordle-data.js';
 import {
   todayKey, dayNumber, hashString, rng, shuffle, msToMidnight, fmtCountdown,
-  loadState, saveState, keyboard, listenKeys, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
+  loadState, saveState, nextPractice, keyboard, listenKeys, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
 } from './common.js';
 
 const TRIES = 6;
@@ -91,9 +91,12 @@ export function wordlePage(mode = 'daily', arg) {
         ${mode !== 'daily' ? `<a class="link-btn" href="/games/cinewordle" data-link>${esc(t('play.daily'))}</a>` : ''}
         ${mode !== 'practice' ? `<a class="link-btn" href="/games/cinewordle/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
         <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
+        ${mode === 'practice' ? `<button type="button" class="link-btn" data-new>⟳ ${esc(t('play.newPuzzle'))}</button>` : ''}
       </div>`),
     );
     head.querySelector('[data-help]').addEventListener('click', showHelp);
+    const nb = head.querySelector('[data-new]');
+    if (nb) nb.addEventListener('click', () => startPractice(true));
     head.querySelector('[data-stats]').addEventListener('click', () => showStats());
   }
 
@@ -266,10 +269,10 @@ export function wordlePage(mode = 'daily', arg) {
   function shareText() {
     const head =
       mode === 'daily'
-        ? `CINENJOY CineWordle #${dayNumber()}`
+        ? `CINEJOY CineWordle #${dayNumber()}`
         : mode === 'challenge'
-          ? `CINENJOY CineWordle · ${t('play.challenge')}`
-          : 'CINENJOY CineWordle';
+          ? `CINEJOY CineWordle · ${t('play.challenge')}`
+          : 'CINEJOY CineWordle';
     const sc = `${state.won ? state.guesses.length : 'X'}/${TRIES}${state.hint ? ' 💡' : ''}`;
     const grid = state.guesses.map((g) => score(g, answer().w).map((s) => EMOJI[s]).join('')).join('\n');
     return `${head} ${sc}\n${grid}`;
@@ -377,10 +380,7 @@ export function wordlePage(mode = 'daily', arg) {
       saved = null;
     }
     if (fresh || !saved || saved.answer == null || !ANSWERS[saved.answer]) {
-      const avoid = dailyIndex();
-      let i;
-      do i = Math.floor(Math.random() * ANSWERS.length);
-      while (i === avoid && ANSWERS.length > 1);
+      const i = nextPractice('cinewordle', ANSWERS.length, dailyIndex());
       saved = { answer: i, key: `p-${i}-${Date.now().toString(36)}` };
       try {
         localStorage.setItem('cinenjoy:game:cinewordle:practice-current', JSON.stringify(saved));

@@ -1,4 +1,4 @@
--- CINENJOY database, Phase 1 step b: settings, watchlists, tags and ratings.
+-- CINEJOY database, Phase 1 step b: settings, watchlists, tags and ratings.
 --
 -- Every visitor gets an automatic anonymous account (Supabase anonymous
 -- sign-ins), so auth.uid() is always set. Row Level Security is on for every

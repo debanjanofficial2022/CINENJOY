@@ -110,10 +110,13 @@ export function crosswordPage(mode = 'daily', arg) {
         ${mode !== 'daily' ? `<a class="link-btn" href="/games/crossword" data-link>${esc(t('play.daily'))}</a>` : ''}
         ${mode !== 'practice' ? `<a class="link-btn" href="/games/crossword/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
         <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
+        ${mode === 'practice' ? `<button type="button" class="link-btn" data-new>⟳ ${esc(t('play.newPuzzle'))}</button>` : ''}
       </div>
       ${getLang() !== 'en' ? `<p class="fine-print">${esc(t('mini.englishNote'))}</p>` : ''}`),
     );
     head.querySelector('[data-help]').addEventListener('click', showHelp);
+    const nb = head.querySelector('[data-new]');
+    if (nb) nb.addEventListener('click', () => startPractice(true));
     head.querySelector('[data-stats]').addEventListener('click', showStats);
   }
 
@@ -452,7 +455,7 @@ export function crosswordPage(mode = 'daily', arg) {
   }
 
   function shareText() {
-    const head = mode === 'daily' ? `CINENJOY ${t('mini.title')} #${dayNumber()}` : `CINENJOY ${t('mini.title')}`;
+    const head = mode === 'daily' ? `CINEJOY ${t('mini.title')} #${dayNumber()}` : `CINEJOY ${t('mini.title')}`;
     const helped = Object.keys(state.revealed).length ? ` · ${t('mini.revealedN', { n: Object.keys(state.revealed).length })}` : '';
     return state.won ? `${head} ⏱ ${fmtTime(totalSeconds())}${helped}` : `${head} · ${t('mini.revealedAll')}`;
   }

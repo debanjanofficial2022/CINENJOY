@@ -10,12 +10,14 @@ import { esc, el, frag, toast, openSheet, debounce } from '../ui.js';
 import { FRAMES } from './frame-data.js';
 import {
   todayKey, dayNumber, hashString, rng, shuffle, msToMidnight, fmtCountdown,
-  loadState, saveState, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
+  loadState, saveState, nextPractice, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
 } from './common.js';
 
 const TRIES = 6;
-const ZOOM = [4.2, 3.2, 2.4, 1.7, 1.25, 1];
-const BLUR = [12, 8, 5, 3, 1.5, 0];
+// The first image used to be too blurred to tell anything, so it now starts
+// where the 4th image used to be (zoom 1.7, blur 3) and clears from there.
+const ZOOM = [1.7, 1.5, 1.35, 1.2, 1.1, 1];
+const BLUR = [3, 2.3, 1.6, 1, 0.5, 0];
 const ORDER = shuffle(FRAMES.map((_, i) => i), rng(hashString('cinenjoy-frame-v1')));
 const go = (href) => document.dispatchEvent(new CustomEvent('cinenjoy:navigate', { detail: href }));
 
@@ -75,8 +77,11 @@ export function framePage(mode = 'daily', challengeId) {
         ${mode !== 'daily' ? `<a class="link-btn" href="/games/frame" data-link>${esc(t('play.daily'))}</a>` : ''}
         ${mode !== 'practice' ? `<a class="link-btn" href="/games/frame/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
         <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
+        ${mode === 'practice' ? `<button type="button" class="link-btn" data-new>⟳ ${esc(t('play.newPuzzle'))}</button>` : ''}
       </div>`),
     );
+    const nb = head.querySelector('[data-new]');
+    if (nb) nb.addEventListener('click', () => startPractice(true));
     head.querySelector('[data-help]').addEventListener('click', () =>
       openSheet({ title: t('play.howToPlay'), body: el(`<div class="help"><p>${esc(t('fg.help1'))}</p><p>${esc(t('fg.help2'))}</p></div>`) }),
     );
@@ -199,7 +204,7 @@ export function framePage(mode = 'daily', challengeId) {
   }
 
   function shareText() {
-    const top = mode === 'daily' ? `CINENJOY ${t('fg.name')} #${dayNumber()}` : `CINENJOY ${t('fg.name')}`;
+    const top = mode === 'daily' ? `CINEJOY ${t('fg.name')} #${dayNumber()}` : `CINEJOY ${t('fg.name')}`;
     const row = state.guesses.map((g) => (g.right ? '🟩' : g.skip ? '⬜' : '🟥')).join('');
     return `${top} ${state.won ? state.guesses.length : 'X'}/${TRIES}\n🎞️ ${row}`;
   }
@@ -289,10 +294,7 @@ export function framePage(mode = 'daily', challengeId) {
   function startPractice(fresh = false) {
     let saved = loadState('frame:practice-current');
     if (fresh || !saved || saved.frame == null || !FRAMES[saved.frame]) {
-      const avoid = dailyFrame();
-      let i;
-      do i = Math.floor(Math.random() * FRAMES.length);
-      while (i === avoid);
+      const i = nextPractice('frame', FRAMES.length, dailyFrame());
       saved = { frame: i, key: `p-${i}-${Date.now().toString(36)}` };
       saveState('frame:practice-current', saved);
     }

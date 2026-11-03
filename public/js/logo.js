@@ -1,9 +1,9 @@
-// The CINENJOY marquee logo.
-// CINE and ENJOY share the E. One N flips like a card from position 3 (CINE)
-// over the shared E to position 5 (ENJOY). It plays on page load, on hover and
-// in a loop while something is loading.
-// Once the N lands in ENJOY, the leftover "CI" and the empty N slot fade out and
-// an old film projector takes their place, throwing ENJOY onto the screen in its beam.
+// The CINEJOY marquee logo.
+// At rest it reads CINEJOY. On play, the N jumps from position 3 over the E,
+// a gap opens between E and J, and the N lands there to spell ENJOY. The moment
+// the N leaves, an old film projector takes the place of "CI" and the empty N
+// slot and throws ENJOY onto the screen in its beam. It plays on page load, on
+// hover and in a loop while something is loading.
 
 const LETTERS = ['C', 'I', 'N', 'E', 'N', 'J', 'O', 'Y'];
 const N_CINE = 2; // position 3
@@ -18,7 +18,7 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
   const el = document.createElement('div');
   el.className = `logo logo-${size}`;
   el.setAttribute('role', 'img');
-  el.setAttribute('aria-label', 'CINENJOY');
+  el.setAttribute('aria-label', 'CINEJOY');
 
   const tiles = LETTERS.map((ch, i) => {
     const tile = document.createElement('span');
@@ -29,6 +29,8 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
     el.append(tile);
     return tile;
   });
+  // The second N's slot is closed at rest, so the logo reads CINEJOY
+  tiles[N_ENJOY].classList.add('shut');
 
   const card = document.createElement('span');
   card.className = 'tile-card';
@@ -57,14 +59,22 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
   beam.setAttribute('aria-hidden', 'true');
   el.append(projector, beam);
 
+  // Where tile i sits once the N slot is open (measured from C, so it works
+  // while the slot is still closed or opening)
+  const unit = () => {
+    const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+    return tiles[0].offsetWidth + gap;
+  };
+  const posOf = (i) => tiles[0].offsetLeft + i * unit();
+
   // Fit the projector over C, I and N, and the beam from its lens across ENJOY.
   function placeProjector() {
     const left = tiles[0].offsetLeft;
-    const right = tiles[N_CINE].offsetLeft + tiles[N_CINE].offsetWidth;
+    const right = posOf(N_CINE) + tiles[0].offsetWidth;
     const top = tiles[0].offsetTop;
     const h = tiles[0].offsetHeight;
     Object.assign(projector.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${h}px` });
-    const end = tiles[LETTERS.length - 1].offsetLeft + tiles[LETTERS.length - 1].offsetWidth;
+    const end = posOf(LETTERS.length - 1) + tiles[0].offsetWidth;
     Object.assign(beam.style, { left: `${right - h * 0.05}px`, top: `${top - h * 0.38}px`, width: `${end - right + h * 0.3}px`, height: `${h * 1.76}px` });
   }
 
@@ -77,8 +87,8 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
   const ghost = (i, on) => tiles[i].classList.toggle('ghost', on);
 
   async function flip(from, to) {
-    const x0 = tiles[from].offsetLeft;
-    const x1 = tiles[to].offsetLeft;
+    const x0 = posOf(from);
+    const x1 = posOf(to);
     const y = tiles[from].offsetTop;
     const lift = tiles[from].offsetHeight * 0.55;
     card.style.top = `${y}px`;
@@ -104,14 +114,21 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
     anim.cancel();
   }
 
-  // The projector starts rolling in while the N is still in the air, so the two
-  // movements blend into one: no pause between the flip and the projector.
+  // The gap opens, the N takes off and the projector appears in the same frame,
+  // so there is no pause between the jump and the projector.
   async function flipToEnjoy() {
     placeProjector();
+    ghost(N_ENJOY, true);
+    tiles[N_ENJOY].classList.remove('shut');
     const landing = flip(N_CINE, N_ENJOY);
-    await wait(300);
     setPhase('enjoy');
     await landing;
+  }
+
+  async function flipToCine() {
+    setPhase('cine');
+    await flip(N_ENJOY, N_CINE);
+    tiles[N_ENJOY].classList.add('shut');
   }
 
   async function play() {
@@ -122,28 +139,30 @@ export function createLogo({ size = 'lg', autoplay = true } = {}) {
         setPhase('cine');
         await wait(700);
         placeProjector();
+        tiles[N_ENJOY].classList.remove('shut');
+        ghost(N_CINE, true);
         setPhase('enjoy');
         await wait(1400);
         return;
       }
-      // CINE lights up, ENJOY's N waits empty
+      // CINE lights up, then the N jumps
       setPhase('cine');
-      ghost(N_ENJOY, true);
       await wait(380);
       await flipToEnjoy();
       await wait(2200);
-      // Loop back and forth while loading
-      while (loading) {
-        setPhase('cine');
-        await flip(N_ENJOY, N_CINE);
-        await wait(260);
+      // The N jumps back to CINEJOY; while loading it keeps going back and forth
+      for (;;) {
+        await flipToCine();
         if (!loading) break;
+        await wait(260);
         await flipToEnjoy();
         await wait(900);
       }
+      await wait(250);
     } finally {
-      // Rest state: the full word, both Ns in place
+      // Rest state: CINEJOY again
       tiles.forEach((t) => t.classList.remove('ghost', 'under'));
+      tiles[N_ENJOY].classList.add('shut');
       setPhase('');
       busy = false;
     }

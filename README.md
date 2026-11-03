@@ -1,4 +1,4 @@
-# CINENJOY
+# CINEJOY
 
 A free website for tracking, sharing and playing with films, series, anime and every other kind of screen storytelling, in any language. It has three sections: **Watchlist**, **Games** and **Lobby**.
 
@@ -47,7 +47,7 @@ public/
   css/main.css          the dark cinema theme
   js/app.js             routing and language switching
   js/i18n.js            all site text in English, Chinese (Simplified) and Spanish
-  js/logo.js            the CINENJOY logo and its N-flip animation
+  js/logo.js            the CINEJOY logo and its N-flip animation
   js/pages.js           the Home, Watchlist, Games and Lobby pages
   js/store.js           safe browser storage for settings
   icons/, manifest.webmanifest   home-screen icons (installable on phones)
@@ -77,7 +77,7 @@ vercel.json             Vercel settings
 
 - **CineWordle** (`js/games/wordle.js`): guess a 5 or 6 letter title in six tries; one hint per game (year, type, genre or lead actor), marked in the score. The answers are well-known one-word titles from TMDB's top-rated films and series; guesses must be common English words or answers.
 - **Daily Mini** (`js/games/crossword.js`, `crossword-gen.js`): a 5x5 American-style crossword, every square in an across and a down word. Every answer is a real title, clued from its details ("1979 science fiction film directed by Ridley Scott"), or a word from a well-known title, clued as a blank ("The Dark Knight ___", 2012 film). Clues are written in the site language. Check adds 3 seconds per letter, Reveal 15.
-- **Daily** puzzles are the same for everyone on a given local date (#1 is 31 October 2026), built from a seeded shuffle. **Practice** is unlimited. **Challenge links** store the exact puzzle in Supabase so friends play the same one and see each other's scores.
+- **Daily** puzzles are the same for everyone on a given local date (#1 is 31 October 2026), built from a seeded shuffle. **Practice** is unlimited: puzzles come from a shuffled deck kept on the device (`nextPractice` in `js/games/common.js`), so none repeats until you have played them all, and a **New one** button skips to the next at any time. Frame Guess starts at a milder zoom and blur (what used to be the 4th image). **Challenge links** store the exact puzzle in Supabase so friends play the same one and see each other's scores.
 - **CineQuiz** (`js/games/quiz.js`, `/games/quiz`): ten multiple-choice questions written on the spot from TMDB details: release year, director or creator, lead actor, plot (title hidden) and tagline. Practice filters: difficulty (how well known the titles are), type, language and country. 15 seconds a question; a right answer scores 500 plus up to 500 for speed. **Friend rooms** (`/games/quiz/room/…`): the host's page runs the game, answers go into `room_moves`, and everyone sees the board live. **Challenge links** store the question set.
 - **Frame Guess** (`js/games/frame.js`, `/games/frame`): name the title from a still with no text on it. It starts zoomed in and blurred; each wrong guess or skip shows more. Guesses are picked from a TMDB search. The 302 titles (`frame-data.js`) are well-known films and series with 2,500+ votes.
 - **Minute Cryptic** (`js/games/cryptic.js`, `/games/cryptic`): one cryptic clue a day, in English. The definition describes a well-known title ("Ridley Scott's 1979 film"); the wordplay is an anagram or a hidden word made from common English words (`cryptic-data.js`, 85 clues generated once and checked by hand). Three staged hints (definition, wordplay, first letter); the score is your time plus 20 seconds a hint and 10 a wrong answer.
@@ -89,6 +89,7 @@ vercel.json             Vercel settings
 - **Poster Reveal** (`js/games/poster.js`): a friend-room race; a poster uncovers tile by tile over 25 seconds and the first right answer takes the round.
 - **CinePictionary** (`js/games/pictionary.js`, `supabase/pictionary.sql`): each player draws a secret title once. Strokes travel as Realtime broadcast messages and are never stored. The database deals the title to the drawer only and checks every guess (`pictionary_guess`), so nobody can read the answer early.
 - Room games share `js/games/roomkit.js` (start page, join link, live room).
+- **Practice with bots** (`js/games/bots.js`, `/games/impostor/practice`, `/games/poster/practice`, `/games/pictionary/practice`): the room games played on your own device against bots, with nothing saved. Linked from each game's page and from a room lobby while there aren't enough players. Impostor bots clue from TMDB keywords, genres, cast, director and decade, and vote for whoever's clues fit the title least; Poster Reveal bots buzz in after a while; in CinePictionary a bot sketches the outlines of a still from its title, and on your turn the bots guess on a timer that speeds up as you draw (they can't see the drawing).
 - The smaller daily games share one frame (`js/games/shell.js`) for daily, practice and challenge puzzles, saving and the result sheet.
 - Results, streaks and stats are saved to the visitor's account (`game_results`, `challenges`, `challenge_results` in `supabase/games.sql`).
 - **Games data** (`js/games/wordle-data.js`, `crossword-data.js`) was generated once from TMDB top-rated titles (11,600 films and series) and a list of common English words (google-10000-english). Answers are kept in the files so the daily puzzles stay the same for everyone.
@@ -114,7 +115,7 @@ vercel.json             Vercel settings
 
 ### The logo
 
-CINE and ENJOY share the E. One N flips like a card from position 3 (CINE) over the E to position 5 (ENJOY). It plays on page load, on hover or tap, and in a loop while something is loading (`setLoading(true)` in `js/app.js`). It respects the visitor's reduced-motion setting.
+At rest the logo reads CINEJOY. The N jumps from position 3 over the E, a gap opens between E and J, and it lands there to spell ENJOY; in the same moment an old film projector replaces "CI" and projects ENJOY in its beam. Then the N jumps back. It plays on page load, on hover or tap, and in a loop while something is loading (`setLoading(true)` in `js/app.js`). It respects the visitor's reduced-motion setting.
 
 ### Adding text
 

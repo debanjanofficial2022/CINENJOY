@@ -8,7 +8,7 @@ import { esc, el, frag, toast, openSheet } from '../ui.js';
 import { CRYPTIC } from './cryptic-data.js';
 import {
   todayKey, dayNumber, hashString, rng, shuffle, msToMidnight, fmtCountdown, fmtTime,
-  loadState, saveState, keyboard, listenKeys, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
+  loadState, saveState, nextPractice, keyboard, listenKeys, ensureName, stats, statsHtml, share, challengeUrl, boardHtml, titleCard,
 } from './common.js';
 
 const HINT_COST = 20;
@@ -79,6 +79,7 @@ export function crypticPage(mode = 'daily', challengeId) {
         ${mode !== 'daily' ? `<a class="link-btn" href="/games/cryptic" data-link>${esc(t('play.daily'))}</a>` : ''}
         ${mode !== 'practice' ? `<a class="link-btn" href="/games/cryptic/practice" data-link>${esc(t('play.practice'))}</a>` : ''}
         <button type="button" class="link-btn" data-stats>${esc(t('play.stats'))}</button>
+        ${mode === 'practice' ? `<button type="button" class="link-btn" data-new>⟳ ${esc(t('play.newPuzzle'))}</button>` : ''}
       </div>`),
     );
     head.querySelector('[data-help]').addEventListener('click', () =>
@@ -87,6 +88,8 @@ export function crypticPage(mode = 'daily', challengeId) {
         body: el(`<div class="help"><p>${esc(t('mc.help1'))}</p><p>${esc(t('mc.help2'))}</p><p>${esc(t('mc.help3'))}</p><p class="muted">${esc(t('mc.englishNote'))}</p></div>`),
       }),
     );
+    const nb = head.querySelector('[data-new]');
+    if (nb) nb.addEventListener('click', () => startPractice(true));
     head.querySelector('[data-stats]').addEventListener('click', async () => {
       const results = await track(db.myResults('cryptic')).catch(() => []);
       openSheet({ title: t('play.stats'), body: el(`<div>${statsHtml(stats(results), { distLabel: false })}</div>`) });
@@ -202,7 +205,7 @@ export function crypticPage(mode = 'daily', challengeId) {
   }
 
   function shareText() {
-    const top = mode === 'daily' ? `CINENJOY Minute Cryptic #${dayNumber()}` : 'CINENJOY Minute Cryptic';
+    const top = mode === 'daily' ? `CINEJOY Minute Cryptic #${dayNumber()}` : 'CINEJOY Minute Cryptic';
     return `${top}\n${state.won ? `⏱ ${fmtTime(total())}` : '❌'}${state.hints ? ` ${'💡'.repeat(state.hints)}` : ''}${state.wrong ? ` ${'✕'.repeat(Math.min(state.wrong, 5))}` : ''}`;
   }
 
@@ -276,10 +279,7 @@ export function crypticPage(mode = 'daily', challengeId) {
   function startPractice(fresh = false) {
     let saved = loadState('cryptic:practice-current');
     if (fresh || !saved || !CRYPTIC[saved.clue]) {
-      const avoid = dailyClue();
-      let i;
-      do i = Math.floor(Math.random() * CRYPTIC.length);
-      while (i === avoid);
+      const i = nextPractice('cryptic', CRYPTIC.length, dailyClue());
       saved = { clue: i, key: `p-${i}-${Date.now().toString(36)}` };
       saveState('cryptic:practice-current', saved);
     }

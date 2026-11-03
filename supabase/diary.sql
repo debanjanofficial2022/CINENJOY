@@ -1,4 +1,4 @@
--- CINENJOY database, Phase 2 step a: Diary & Stats.
+-- CINEJOY database, Phase 2 step a: Diary & Stats.
 -- Ratings keep the title's details (genres, countries, creators, runtime) so the
 -- diary and stats can be worked out without looking every title up again.
 -- Safe to run more than once.

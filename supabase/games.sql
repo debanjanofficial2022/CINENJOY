@@ -1,4 +1,4 @@
--- CINENJOY database, Phase 1 step d: game results, streaks and challenge links.
+-- CINEJOY database, Phase 1 step d: game results, streaks and challenge links.
 -- Safe to run more than once.
 
 -- One row per finished game. Daily games use the date as the puzzle key,
