@@ -1382,3 +1382,69 @@ a.link-btn { color: var(--muted); }
 .comfort .sug-strip { grid-auto-columns: minmax(160px, 200px); }
 .list-pick { display: flex; flex-direction: column; gap: 8px; }
 .list-pick .list-card { width: 100%; border: 1px solid var(--line); cursor: pointer; font: inherit; text-align: left; }
+
+/* =====================================================================
+   Phase 2 step b: friend rooms and Movie Night
+   ===================================================================== */
+
+.avatar.online { box-shadow: 0 0 0 2px #7fd18b; }
+.check-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow: auto; }
+.check { display: flex; align-items: center; gap: 10px; color: var(--text); font-size: 15px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--gold); }
+.region-pick { margin-top: 10px; flex-direction: row; align-items: center; gap: 8px; }
+.mn-tabs { max-width: 460px; margin: 16px 0; }
+.tonight { display: flex; gap: 14px; align-items: flex-start; margin-top: 14px; padding: 12px; border-radius: var(--radius); background: rgba(242, 194, 90, 0.12); border: 1px solid rgba(242, 194, 90, 0.4); }
+.tonight p { margin: 0; }
+.tonight-title { font: 400 28px var(--display); color: var(--gold-2); }
+:lang(zh-CN) .tonight-title { font: 700 20px var(--body); }
+.where { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.where > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.where .label { min-width: 54px; }
+.where .fine-print { margin: 2px 0 0; font-size: 11.5px; }
+.where-none { margin: 4px 0 0; font-size: 13px; }
+.prov { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 2px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); font-size: 12px; }
+.prov img { width: 20px; height: 20px; border-radius: 5px; }
+
+.swipe-progress { text-align: center; margin: 0 0 8px; }
+.swipe-wrap { display: flex; justify-content: center; touch-action: pan-y; }
+.swipe-card {
+  position: relative;
+  width: min(100%, 340px);
+  aspect-ratio: 2 / 3;
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #3a1219, #150a0c);
+  box-shadow: 0 30px 60px -25px #000, inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  user-select: none;
+  cursor: grab;
+  outline: none;
+}
+.swipe-card:focus-visible { box-shadow: 0 0 0 3px var(--gold); }
+.swipe-card img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.swipe-info { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 16px 14px; background: linear-gradient(180deg, transparent, rgba(8, 4, 5, 0.92) 45%); }
+.swipe-title { margin: 0; font: 400 32px var(--display); color: #fff6e3; line-height: 1; }
+:lang(zh-CN) .swipe-title { font: 700 22px var(--body); }
+.swipe-info .pc-meta { margin: 4px 0 0; }
+.stamp { position: absolute; top: 22px; padding: 4px 12px; border: 3px solid; border-radius: 8px; font: 400 34px var(--display); opacity: 0; transform: rotate(-14deg); transition: opacity 0.15s; }
+.stamp.yes { left: 18px; color: #7fd18b; }
+.stamp.no { right: 18px; color: #ff8a7a; transform: rotate(14deg); }
+.swipe-card.lean-yes .stamp.yes, .swipe-card.lean-no .stamp.no { opacity: 1; }
+.swipe-buttons { display: flex; justify-content: center; gap: 28px; margin: 16px 0 6px; }
+.swipe-btn { width: 66px; height: 66px; border-radius: 50%; border: 2px solid; background: rgba(0, 0, 0, 0.3); font-size: 28px; cursor: pointer; }
+.swipe-btn.no { color: #ff8a7a; border-color: #ff8a7a; }
+.swipe-btn.yes { color: #7fd18b; border-color: #7fd18b; }
+.swipe-btn:hover { background: rgba(255, 255, 255, 0.06); }
+.center { text-align: center; }
+
+.mn-list { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.mn-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); }
+.mn-row .row-text { gap: 2px; }
+.tally { font: 400 26px var(--display); color: var(--gold-2); min-width: 28px; text-align: center; }
+.decide-block { margin-bottom: 28px; }
+.decide-block h2 { font: 400 26px var(--display); color: var(--cream); margin: 0 0 4px; letter-spacing: 0.04em; }
+:lang(zh-CN) .decide-block h2 { font: 700 19px var(--body); }
+.wheel-wrap { position: relative; width: min(100%, 360px); margin: 10px 0 12px; }
+.wheel { width: 100%; height: auto; display: block; }
+.wheel-pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 28px; z-index: 1; text-shadow: 0 2px 6px #000; }
+.spin-result { font: 400 28px var(--display); color: var(--gold-2); min-height: 1.2em; }
+:lang(zh-CN) .spin-result { font: 700 20px var(--body); }
