@@ -18,7 +18,7 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | a | Lobby: Diary & Stats (with world map); Suggestions | Done |
 | b | Friend rooms and Movie Night | Done |
 | c | CineQuiz and Frame Guess | Done |
-| d | Minute Cryptic and Movie Impostor | Next |
+| d | Minute Cryptic and Movie Impostor | Done |
 | e | Instagram and TikTok import | On hold (owner's decision) |
 
 ## How it is built
@@ -56,6 +56,7 @@ supabase/games.sql      game results and challenge links (run after schema.sql)
 supabase/diary.sql      title details kept on ratings, for Diary & Stats
 supabase/rooms.sql      friend rooms, Movie Night votes and room reports
 supabase/moves.sql      moves in game rooms (quiz answers, clues, votes); allows the newer game names
+supabase/secrets.sql    cards dealt by the database in Movie Impostor (each player reads only their own)
 public/js/games/        the games, their data and shared game code
 vercel.json             Vercel settings
 ```
@@ -71,6 +72,8 @@ vercel.json             Vercel settings
 - **Daily** puzzles are the same for everyone on a given local date (#1 is 31 October 2026), built from a seeded shuffle. **Practice** is unlimited. **Challenge links** store the exact puzzle in Supabase so friends play the same one and see each other's scores.
 - **CineQuiz** (`js/games/quiz.js`, `/games/quiz`): ten multiple-choice questions written on the spot from TMDB details: release year, director or creator, lead actor, plot (title hidden) and tagline. Practice filters: difficulty (how well known the titles are), type, language and country. 15 seconds a question; a right answer scores 500 plus up to 500 for speed. **Friend rooms** (`/games/quiz/room/…`): the host's page runs the game, answers go into `room_moves`, and everyone sees the board live. **Challenge links** store the question set.
 - **Frame Guess** (`js/games/frame.js`, `/games/frame`): name the title from a still with no text on it. It starts zoomed in and blurred; each wrong guess or skip shows more. Guesses are picked from a TMDB search. The 302 titles (`frame-data.js`) are well-known films and series with 2,500+ votes.
+- **Minute Cryptic** (`js/games/cryptic.js`, `/games/cryptic`): one cryptic clue a day, in English. The definition describes a well-known title ("Ridley Scott's 1979 film"); the wordplay is an anagram or a hidden word made from common English words (`cryptic-data.js`, 85 clues generated once and checked by hand). Three staged hints (definition, wordplay, first letter); the score is your time plus 20 seconds a hint and 10 a wrong answer.
+- **Movie Impostor** (`js/games/impostor.js`, `/games/impostor`): a friend-room game for 3 or more. The database function `deal_impostor` picks the title and the impostor, so not even the host knows; each player can read only their own card (`room_secrets`). Two rounds of one-word clues (word filter, no words from the title), a vote, and a last guess for a caught impostor.
 - Results, streaks and stats are saved to the visitor's account (`game_results`, `challenges`, `challenge_results` in `supabase/games.sql`).
 - **Games data** (`js/games/wordle-data.js`, `crossword-data.js`) was generated once from TMDB top-rated titles (11,600 films and series) and a list of common English words (google-10000-english). Answers are kept in the files so the daily puzzles stay the same for everyone.
 
