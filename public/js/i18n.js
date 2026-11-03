@@ -29,7 +29,7 @@ const dict = {
       admit: 'Admit one',
       cards: {
         watchlist: 'Keep, tag, rate and share everything you want to watch or have watched.',
-        games: 'Twelve cinema games to play daily, practise, or race your friends.',
+        games: 'Thirteen cinema games to play daily, practise, or race your friends.',
         lobby: 'Plan movie nights, track your diary, explore and learn cinema history.',
       },
     },
@@ -45,10 +45,11 @@ const dict = {
     },
     games: {
       title: 'Games',
-      lead: 'Twelve cinema games. Play the daily puzzle, practise as much as you like, or challenge your friends.',
+      lead: 'Thirteen cinema games. Play the daily puzzle, practise as much as you like, or challenge your friends.',
       list: {
         cinewordle: ['CineWordle', 'Guess a 5 or 6 letter title in six tries.'],
-        crossword: ['Cine Crossword', 'The Daily Mini: a 5x5 crossword of film and series titles. The themed 11x11 Weekend crossword comes later.'],
+        crossword: ['Cine Crossword', 'The Daily Mini: a 5x5 crossword of film and series titles.'],
+        weekend: ['Weekend Crossword', 'A bigger 11x11 crossword of titles, new every Saturday.'],
         cryptic: ['Minute Cryptic', 'One cryptic clue a day, with hints in stages.'],
         quiz: ['CineQuiz', 'Ten-question rounds on plots, creators, cast and quotes.'],
         frame: ['Frame Guess', 'Name the title from a still that sharpens over six tries.'],
@@ -292,6 +293,7 @@ const dict = {
       turn: 'Turn {i} of {n}', drawThis: 'Draw: {title}', guessThis: '{name} is drawing. What is it?', canvas: 'Drawing board', color: 'Colour', clear: 'Clear',
       noLetters: 'No letters or numbers, please.', gotIt: '{name} got it!', solvedBy: 'Guessed by {n}',
     },
+    wk: { title: 'Weekend Crossword', weekN: 'Weekend #{n}' },
     rating: { label: 'Rating', stars: '{n} stars' },
     join: {
       title: "You're invited", body: 'Join "{name}": {items} titles, {people} people.', btn: 'Join list',
@@ -325,7 +327,7 @@ const dict = {
       admit: '凭票入场',
       cards: {
         watchlist: '收藏、标记、评分并分享你想看和看过的一切。',
-        games: '十二款电影游戏：每日挑战、随意练习，或和朋友比拼。',
+        games: '十三款电影游戏：每日挑战、随意练习，或和朋友比拼。',
         lobby: '约电影之夜、记观影日记、探索新片、了解电影史。',
       },
     },
@@ -341,10 +343,11 @@ const dict = {
     },
     games: {
       title: '游戏',
-      lead: '十二款电影游戏。玩每日谜题，尽情练习，或向朋友发起挑战。',
+      lead: '十三款电影游戏。玩每日谜题，尽情练习，或向朋友发起挑战。',
       list: {
         cinewordle: ['CineWordle', '六次之内猜出一个 5 或 6 个字母的片名。'],
-        crossword: ['电影填字', '每日迷你：用电影和剧集片名组成的 5x5 填字。11x11 的周末主题填字稍后推出。'],
+        crossword: ['电影填字', '每日迷你：用电影和剧集片名组成的 5x5 填字。'],
+        weekend: ['周末填字', '更大的 11x11 片名填字，每周六更新。'],
         cryptic: ['一分钟字谜', '每天一道隐语谜题，可分步提示。'],
         quiz: ['电影问答', '每轮十题：剧情、主创、演员和台词。'],
         frame: ['猜画面', '一张剧照在六次机会中逐渐变清晰，猜出片名。'],
@@ -588,6 +591,7 @@ const dict = {
       turn: '第 {i}/{n} 轮', drawThis: '请画：{title}', guessThis: '{name} 正在画，猜猜是什么？', canvas: '画板', color: '颜色', clear: '清空',
       noLetters: '请不要写字母或数字。', gotIt: '{name} 猜中了！', solvedBy: '{n} 人猜中',
     },
+    wk: { title: '周末填字', weekN: '第 {n} 个周末' },
     rating: { label: '评分', stars: '{n} 星' },
     join: {
       title: '你收到了邀请', body: '加入「{name}」：{items} 部作品，{people} 人。', btn: '加入片单',
@@ -621,7 +625,7 @@ const dict = {
       admit: 'Entrada individual',
       cards: {
         watchlist: 'Guarda, etiqueta, puntúa y comparte todo lo que quieres ver o ya viste.',
-        games: 'Doce juegos de cine: el reto diario, práctica libre o contra tus amigos.',
+        games: 'Trece juegos de cine: el reto diario, práctica libre o contra tus amigos.',
         lobby: 'Organiza noches de película, lleva tu diario, explora y aprende historia del cine.',
       },
     },
@@ -637,10 +641,11 @@ const dict = {
     },
     games: {
       title: 'Juegos',
-      lead: 'Doce juegos de cine. Resuelve el reto diario, practica todo lo que quieras o reta a tus amigos.',
+      lead: 'Trece juegos de cine. Resuelve el reto diario, practica todo lo que quieras o reta a tus amigos.',
       list: {
         cinewordle: ['CineWordle', 'Adivina un título de 5 o 6 letras en seis intentos.'],
-        crossword: ['Crucigrama Cine', 'El Mini diario: un crucigrama de 5x5 con títulos de películas y series. El temático de fin de semana de 11x11 llegará después.'],
+        crossword: ['Crucigrama Cine', 'El Mini diario: un crucigrama de 5x5 con títulos de películas y series.'],
+        weekend: ['Crucigrama de fin de semana', 'Un crucigrama más grande de 11x11 con títulos, nuevo cada sábado.'],
         cryptic: ['Críptico Minuto', 'Una pista críptica al día, con ayudas por etapas.'],
         quiz: ['CineQuiz', 'Rondas de diez preguntas sobre tramas, autores, reparto y frases.'],
         frame: ['Adivina el fotograma', 'Nombra el título a partir de una imagen que se aclara en seis intentos.'],
@@ -884,6 +889,7 @@ const dict = {
       turn: 'Turno {i} de {n}', drawThis: 'Dibuja: {title}', guessThis: '{name} está dibujando. ¿Qué es?', canvas: 'Pizarra', color: 'Color', clear: 'Borrar',
       noLetters: 'Sin letras ni números, por favor.', gotIt: '¡{name} lo adivinó!', solvedBy: 'Lo adivinaron {n}',
     },
+    wk: { title: 'Crucigrama de fin de semana', weekN: 'Fin de semana n.º {n}' },
     rating: { label: 'Puntuación', stars: '{n} estrellas' },
     join: {
       title: 'Te han invitado', body: 'Únete a "{name}": {items} títulos, {people} personas.', btn: 'Unirse a la lista',

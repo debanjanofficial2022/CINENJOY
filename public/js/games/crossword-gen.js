@@ -154,3 +154,90 @@ export function generate(words, rand) {
   }
   return null;
 }
+
+/**
+ * A freestyle crossword on an n x n grid (the Weekend puzzle): words are laid
+ * across and down, each crossing at least one word already placed, with no
+ * letters side by side outside a crossing. Returns { pattern, grid } or null.
+ */
+export function generateFree(words, rand, n = 11, target = 22) {
+  const pool = words.filter((w) => w.length >= 3 && w.length <= n);
+  const shuffle = (a) => {
+    const b = a.slice();
+    for (let i = b.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rand() * (i + 1));
+      [b[i], b[j]] = [b[j], b[i]];
+    }
+    return b;
+  };
+  const byLetter = new Map();
+  for (const w of pool)
+    for (let i = 0; i < w.length; i += 1) {
+      if (!byLetter.has(w[i])) byLetter.set(w[i], []);
+      byLetter.get(w[i]).push([w, i]);
+    }
+  const grid = Array.from({ length: n }, () => Array(n).fill(''));
+  const placed = [];
+  const used = new Set();
+  const at = (r, c) => (r < 0 || c < 0 || r >= n || c >= n ? '' : grid[r][c]);
+
+  function fits(w, r, c, dir) {
+    const dr = dir === 'down' ? 1 : 0;
+    const dc = dir === 'across' ? 1 : 0;
+    const er = r + dr * (w.length - 1);
+    const ec = c + dc * (w.length - 1);
+    if (r < 0 || c < 0 || er >= n || ec >= n) return 0;
+    if (at(r - dr, c - dc) || at(er + dr, ec + dc)) return 0;
+    let crossings = 0;
+    for (let i = 0; i < w.length; i += 1) {
+      const y = r + dr * i;
+      const x = c + dc * i;
+      const g = grid[y][x];
+      if (g) {
+        if (g !== w[i]) return 0;
+        crossings += 1;
+      } else if (at(y + dc, x + dr) || at(y - dc, x - dr)) return 0; // no neighbours alongside
+    }
+    return crossings === w.length ? 0 : crossings;
+  }
+  function put(w, r, c, dir) {
+    for (let i = 0; i < w.length; i += 1) grid[r + (dir === 'down' ? i : 0)][c + (dir === 'across' ? i : 0)] = w[i];
+    placed.push({ w, r, c, dir });
+    used.add(w);
+  }
+
+  const long = shuffle(pool.filter((w) => w.length >= 7 && w.length <= n - 2));
+  if (!long.length) return null;
+  const first = long[0];
+  put(first, Math.floor(n / 2), Math.floor(rand() * (n - first.length + 1)), 'across');
+
+  for (let tries = 0; tries < 900 && placed.length < target; tries += 1) {
+    const host = placed[Math.floor(rand() * placed.length)];
+    const k = Math.floor(rand() * host.w.length);
+    const hr = host.r + (host.dir === 'down' ? k : 0);
+    const hc = host.c + (host.dir === 'across' ? k : 0);
+    const dir = host.dir === 'across' ? 'down' : 'across';
+    const options = byLetter.get(host.w[k]) || [];
+    let best = null;
+    for (let j = 0; j < 60 && j < options.length; j += 1) {
+      const [w, i] = options[Math.floor(rand() * options.length)];
+      if (used.has(w)) continue;
+      const r = dir === 'down' ? hr - i : hr;
+      const c = dir === 'across' ? hc - i : hc;
+      const x = fits(w, r, c, dir);
+      // Prefer longer words and more crossings
+      const score = x ? x * 3 + w.length : 0;
+      if (score && (!best || score > best.score)) best = { w, r, c, score };
+    }
+    if (best) put(best.w, best.r, best.c, dir);
+  }
+  if (placed.length < 14) return null;
+  const pattern = grid.map((row) => row.map((ch) => (ch ? '.' : '#')).join(''));
+  // Every run of letters must be a placed word
+  const words2 = new Set(placed.map((p) => p.w));
+  for (const s of slotsOf(pattern)) {
+    const word = s.cells.map(([r, c]) => grid[r][c]).join('');
+    if (!words2.has(word)) return null;
+  }
+  return { pattern, grid: grid.map((row) => row.map((ch) => ch || '#').join('')) };
+}
