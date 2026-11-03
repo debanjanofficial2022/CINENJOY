@@ -17,6 +17,9 @@ const routes = {
   '/lobby/diary': { view: diaryPage, nav: 'lobby', title: 'diary.title' },
   '/watchlist/suggestions': { view: suggestionsPage, nav: 'watchlist', title: 'sug.title' },
   '/lobby/movie-night': { view: movieNightsPage, nav: 'lobby', title: 'mn.title' },
+  '/lobby/explore': { view: () => lazyPage(import('./explore.js').then((m) => m.explorePage())), nav: 'lobby', title: 'nav.lobby' },
+  '/lobby/history': { view: () => lazyPage(import('./history.js').then((m) => m.historyPage())), nav: 'lobby', title: 'nav.lobby' },
+  '/lobby/badges': { view: () => lazyPage(import('./badges.js').then((m) => m.badgesPage())), nav: 'lobby', title: 'nav.lobby' },
 };
 
 // Addresses with a value in them: /watchlist/<list id>, /join/<invite code>
@@ -90,6 +93,10 @@ function roomGameView(game, kind, value) {
   const file = game.toLowerCase() === 'poster' ? './games/poster.js' : './games/pictionary.js';
   const pre = game.toLowerCase() === 'poster' ? 'poster' : 'pictionary';
   return lazy(import(file).then((m) => (kind === 'room' ? m[`${pre}Room`](value) : kind === 'join' ? m[`${pre}Join`](value) : m[`${pre}Home`]())));
+}
+
+function lazyPage(load) {
+  return lazy(load);
 }
 
 function lazy(load) {
