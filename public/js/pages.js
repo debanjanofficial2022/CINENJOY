@@ -37,8 +37,9 @@ const GAMES = [
 const LOBBY = [
   { id: 'night', phase: 2, icon: '🍿', href: '/lobby/movie-night' },
   { id: 'diary', phase: 2, icon: '📔', href: '/lobby/diary' },
-  { id: 'explore', phase: 3, icon: '🧭' },
-  { id: 'history', phase: 3, icon: '🎞️' },
+  { id: 'badges', phase: 3, icon: '🏅', href: '/lobby/badges' },
+  { id: 'explore', phase: 3, icon: '🧭', href: '/lobby/explore' },
+  { id: 'history', phase: 3, icon: '🎞️', href: '/lobby/history' },
 ];
 
 const statusChip = ({ phase, step, href }) =>
