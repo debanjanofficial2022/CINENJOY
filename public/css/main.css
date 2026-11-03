@@ -1420,7 +1420,9 @@ a.link-btn { color: var(--muted); }
   outline: none;
 }
 .swipe-card:focus-visible { box-shadow: 0 0 0 3px var(--gold); }
-.swipe-card img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.swipe-card > img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.swipe-where .prov { font-size: 11px; }
+.swipe-where .fine-print { display: none; }
 .swipe-info { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 16px 14px; background: linear-gradient(180deg, transparent, rgba(8, 4, 5, 0.92) 45%); }
 .swipe-title { margin: 0; font: 400 32px var(--display); color: #fff6e3; line-height: 1; }
 :lang(zh-CN) .swipe-title { font: 700 22px var(--body); }

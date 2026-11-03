@@ -70,9 +70,11 @@ async function providers(item, region) {
   return providerCache.get(k);
 }
 
-async function whereHtml(item) {
+async function whereHtml(item, { compact = false } = {}) {
   const region = myRegion();
-  const p = await providers(item, region);
+  const full = await providers(item, region);
+  // On the swipe card: streaming only, a few logos
+  const p = compact ? { ...full, stream: full.stream.slice(0, 4), rent: full.stream.length ? [] : full.rent.slice(0, 3), buy: [] } : full;
   const chips = (list) =>
     list
       .map(
@@ -474,7 +476,7 @@ export function movieNightPage(roomId) {
       </div>
       <p class="fine-print center">${esc(t('mn.swipeHint'))}</p>`),
     );
-    whereHtml(item).then((h) => {
+    whereHtml(item, { compact: true }).then((h) => {
       const w = body.querySelector('[data-where]');
       if (w) w.innerHTML = h;
     });
