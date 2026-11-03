@@ -371,6 +371,14 @@ export async function saveResult({ game, mode, puzzleKey, won, score, hintUsed =
   return data || null;
 }
 
+/** Every game result you have saved, for badges and the year in review. */
+export async function allResults(limit = 2000) {
+  const { sb } = await ready();
+  return must(
+    await sb.from('game_results').select('game, mode, puzzle_key, won, score, hint_used, detail, created_at').order('created_at', { ascending: false }).limit(limit),
+  );
+}
+
 export async function myResults(game, limit = 400) {
   const { sb } = await ready();
   return must(

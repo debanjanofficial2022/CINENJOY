@@ -23,6 +23,7 @@ const PASS_PARAMS = [
   // discover filters (for suggestions)
   'sort_by', 'with_original_language', 'with_genres', 'without_genres', 'vote_count.gte', 'vote_average.gte',
   'primary_release_date.gte', 'primary_release_date.lte', 'first_air_date.gte', 'first_air_date.lte', 'with_origin_country',
+  'with_runtime.gte', 'with_runtime.lte', 'without_keywords',
 ];
 
 module.exports = async function handler(req, res) {

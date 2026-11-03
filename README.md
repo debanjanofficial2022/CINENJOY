@@ -25,8 +25,8 @@ Live at <https://cinenjoy.vercel.app> once the Vercel project is set up.
 | --- | --- | --- |
 | a | Emoji Plot, Timeline, Higher or Lower | Done |
 | b | Six Degrees, Poster Reveal, CinePictionary | Done |
-| c | Weekend 11x11 crossword | Next |
-| d | Lobby: Explore and CineHistory; badges; year in review | To do |
+| c | Weekend 11x11 crossword | Done |
+| d | Lobby: Explore and CineHistory; badges; year in review | Done |
 
 ## How it is built
 
@@ -77,6 +77,7 @@ vercel.json             Vercel settings
 
 - **CineWordle** (`js/games/wordle.js`): guess a popular title of any length (4 to 14 letters, up to three words; mostly films) in six tries. Spaces show as gaps and aren't typed; any letters count as a guess. Each green letter found unlocks a clear clue (genre, year, director, cast, tagline, plot) and each yellow letter a vague one (decade, country, length, keyword, rating, language, initials), written from TMDB in the site language. Earlier rows never redraw while you type. Saves use the `cinewordle2:` names; old challenge links (5-6 letter version) no longer open.
 - **Daily Mini** (`js/games/crossword.js`, `crossword-gen.js`): a 5x5 American-style crossword, every square in an across and a down word. Every answer is a real title, clued from its details ("1979 science fiction film directed by Ridley Scott"), or a word from a well-known title, clued as a blank ("The Dark Knight ___", 2012 film). Clues are written in the site language. Check adds 3 seconds per letter, Reveal 15.
+- **Weekend Crossword** (`/games/weekend`, same code as the Mini with `generateFree` in `crossword-gen.js`): an 11x11 freestyle grid of 14 to 22 answers, each crossing another. Besides the Mini's words it uses CineWordle titles and well-known titles run together ("LALALAND", clued with word lengths "(2,2,4)" and details fetched from TMDB). A new puzzle every Saturday.
 - **Daily** puzzles are the same for everyone on a given local date (#1 is 31 October 2026), built from a seeded shuffle. **Practice** is unlimited: puzzles come from a shuffled deck kept on the device (`nextPractice` in `js/games/common.js`), so none repeats until you have played them all, and a **New one** button skips to the next at any time. Frame Guess starts at a milder zoom and blur (what used to be the 4th image). **Challenge links** store the exact puzzle in Supabase so friends play the same one and see each other's scores.
 - **CineQuiz** (`js/games/quiz.js`, `/games/quiz`): ten multiple-choice questions written on the spot from TMDB details: release year, director or creator, lead actor, plot (title hidden) and tagline. Practice filters: difficulty (how well known the titles are), type, language and country. 15 seconds a question; a right answer scores 500 plus up to 500 for speed. **Friend rooms** (`/games/quiz/room/…`): the host's page runs the game, answers go into `room_moves`, and everyone sees the board live. **Challenge links** store the question set.
 - **Frame Guess** (`js/games/frame.js`, `/games/frame`): name the title from a still with no text on it. It starts zoomed in and blurred; each wrong guess or skip shows more. Guesses are picked from a TMDB search. The 302 titles (`frame-data.js`) are well-known films and series with 2,500+ votes.
@@ -99,6 +100,13 @@ vercel.json             Vercel settings
 - **Diary** (`js/diary.js`, `/lobby/diary`): every title you rated or marked watched, by month. Ratings keep the title's details (`supabase/diary.sql`); older ones are filled in from TMDB once.
 - **Stats**: totals, and breakdowns by type, language, country, decade, genre, creator and rating. The world map (`js/worldmap.js`) loads d3-geo, topojson-client, world-atlas and i18n-iso-countries from jsDelivr only when shown.
 - **Suggestions** (`js/suggest.js`, `/watchlist/suggestions`): TMDB recommendations for your favourites (4 stars and up), weighted by the genres, languages and media you rate highly; only titles rated 6.6+ by 300+ people. One daily pick outside your comfort zone: a highly rated title in a language you rarely watch.
+
+### Explore, CineHistory, Badges and Year in review
+
+- **Explore** (`js/explore.js`, `/lobby/explore`): coming soon (TMDB upcoming films for your country, series on air), and the most-loved films and series by country or language, by film movement (eleven movements with their years and country, e.g. Italian Neorealism, Italy 1943–1955) or by type (films, series, anime, documentaries, shorts). Tap a poster for details, or add it to a list.
+- **CineHistory** (`js/history.js`, `history-data.js`, `/lobby/history`): eleven true stories of films that changed the real world and an eleven-step history of cinema, each with its source link (Wikipedia). Written in the three site languages.
+- **Badges** (`js/badges.js`, `/lobby/badges`): 18 badges worked out from your ratings, watched titles and game results; nothing extra is stored.
+- **Year in review**: titles watched, films and series, hours (from running times), top genre, country and language, highest rated, games played. Pick a year; save the card as an image or share it.
 
 ### Friend rooms and Movie Night
 

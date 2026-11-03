@@ -17,6 +17,9 @@ const routes = {
   '/lobby/diary': { view: diaryPage, nav: 'lobby', title: 'diary.title' },
   '/watchlist/suggestions': { view: suggestionsPage, nav: 'watchlist', title: 'sug.title' },
   '/lobby/movie-night': { view: movieNightsPage, nav: 'lobby', title: 'mn.title' },
+  '/lobby/explore': { view: () => lazyPage(import('./explore.js').then((m) => m.explorePage())), nav: 'lobby', title: 'nav.lobby' },
+  '/lobby/history': { view: () => lazyPage(import('./history.js').then((m) => m.historyPage())), nav: 'lobby', title: 'nav.lobby' },
+  '/lobby/badges': { view: () => lazyPage(import('./badges.js').then((m) => m.badgesPage())), nav: 'lobby', title: 'nav.lobby' },
 };
 
 // Addresses with a value in them: /watchlist/<list id>, /join/<invite code>
@@ -26,7 +29,7 @@ const patterns = [
   { re: /^\/lobby\/movie-night\/join\/([A-Za-z0-9]{4,12})$/, view: movieNightJoinPage, nav: 'lobby', title: 'mn.title' },
   { re: /^\/lobby\/movie-night\/([0-9a-f-]{36})$/i, view: movieNightPage, nav: 'lobby', title: 'mn.title' },
   // /games/cinewordle, /games/cinewordle/practice, /games/cinewordle/c/<challenge id>; same for crossword
-  { re: /^\/games\/(cinewordle|crossword|frame|cryptic|emoji|timeline|higher|degrees)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
+  { re: /^\/games\/(cinewordle|crossword|weekend|frame|cryptic|emoji|timeline|higher|degrees)(?:\/(practice)|\/c\/([0-9a-f-]{36}))?$/i, view: gameView, nav: 'games', title: 'nav.games' },
   // Practice with bots: /games/impostor/practice, /games/poster/practice, /games/pictionary/practice
   { re: /^\/games\/(impostor|poster|pictionary)\/practice$/i, view: botsView, nav: 'games', title: 'nav.games' },
   // CineQuiz: /games/quiz, /games/quiz/c/<id>, /games/quiz/room/<id>, /games/quiz/join/<code>
@@ -65,7 +68,7 @@ function gameView(game, practice, challengeId) {
                 ? import('./games/degrees.js').then((m) => m.degreesPage(mode, challengeId))
                 : g === 'higher'
                 ? import('./games/higher.js').then((m) => m.higherPage(challengeId ? 'challenge' : 'practice', challengeId))
-                : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId));
+                : import('./games/crossword.js').then((m) => m.crosswordPage(mode, challengeId, g === 'weekend' ? 'weekend' : 'mini'));
   return lazy(load);
 }
 
@@ -90,6 +93,10 @@ function roomGameView(game, kind, value) {
   const file = game.toLowerCase() === 'poster' ? './games/poster.js' : './games/pictionary.js';
   const pre = game.toLowerCase() === 'poster' ? 'poster' : 'pictionary';
   return lazy(import(file).then((m) => (kind === 'room' ? m[`${pre}Room`](value) : kind === 'join' ? m[`${pre}Join`](value) : m[`${pre}Home`]())));
+}
+
+function lazyPage(load) {
+  return lazy(load);
 }
 
 function lazy(load) {

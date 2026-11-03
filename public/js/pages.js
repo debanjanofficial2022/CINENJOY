@@ -21,6 +21,7 @@ function section(cls, inner) {
 const GAMES = [
   { id: 'cinewordle', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/cinewordle' },
   { id: 'crossword', modes: ['daily', 'practice', 'challenge'], phase: 1, href: '/games/crossword' },
+  { id: 'weekend', modes: ['daily', 'practice', 'challenge'], phase: 3, href: '/games/weekend' },
   { id: 'cryptic', modes: ['daily', 'practice', 'challenge'], phase: 2, href: '/games/cryptic' },
   { id: 'quiz', modes: ['practice', 'room', 'challenge'], phase: 2, href: '/games/quiz' },
   { id: 'frame', modes: ['daily', 'practice', 'challenge'], phase: 2, href: '/games/frame' },
@@ -36,8 +37,9 @@ const GAMES = [
 const LOBBY = [
   { id: 'night', phase: 2, icon: '🍿', href: '/lobby/movie-night' },
   { id: 'diary', phase: 2, icon: '📔', href: '/lobby/diary' },
-  { id: 'explore', phase: 3, icon: '🧭' },
-  { id: 'history', phase: 3, icon: '🎞️' },
+  { id: 'badges', phase: 3, icon: '🏅', href: '/lobby/badges' },
+  { id: 'explore', phase: 3, icon: '🧭', href: '/lobby/explore' },
+  { id: 'history', phase: 3, icon: '🎞️', href: '/lobby/history' },
 ];
 
 const statusChip = ({ phase, step, href }) =>
