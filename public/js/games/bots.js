@@ -16,13 +16,13 @@ import * as tmdb from '../tmdb.js';
 import { TMDB_IMG } from '../config.js';
 import { esc, el, toast } from '../ui.js';
 import { FRAMES } from './frame-data.js';
-import { impostorPool } from './impostor-movies.js';
+import { impostorPool, impostorTitleList, titleMatch } from './impostor-movies.js';
 import { shuffle, hashString, rng } from './common.js';
 import { titlePicker } from './picker.js';
 import { isRude, clean } from '../rooms.js';
 
 const ME = 'me';
-const NAMES = ['Reel Rita', 'Popcorn Pete', 'Director Dot', 'Credits Carl', 'Matinee Max', 'Cue Card Cleo'];
+const NAMES = ['Aarav', 'Ananya', 'Rohan', 'Priya', 'Ishaan', 'Meera', 'Arjun', 'Diya', 'Kabir', 'Riya', 'Sourav', 'Ishita', 'Arnab', 'Tanvi', 'Vivaan', 'Moumita'];
 const rand = (a, b) => a + Math.random() * (b - a);
 const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const mix = (arr) => shuffle(arr, Math.random);
@@ -37,7 +37,7 @@ const norm = (s) =>
 function makeBots(n) {
   return mix(NAMES)
     .slice(0, n)
-    .map((name, i) => ({ id: `bot${i}`, name: `🤖 ${name}` }));
+    .map((name, i) => ({ id: `bot${i}`, name: `${name} 🤖` }));
 }
 
 function titles() {
@@ -95,40 +95,55 @@ async function factsOf(item) {
       const r = await fetch(`/api/tmdb?${q}`);
       if (!r.ok) throw new Error('tmdb');
       const d = await r.json();
-      const titleWords = new Set(norm(item.title).split(' '));
-      const clues = [];
+      // Words from the title (including a translated or original name in
+      // brackets) are never used as clues
+      const titleWords = new Set(norm(item.title.replace(/[()/]/g, ' ')).split(' '));
       const related = new Set();
-      const add = (w, asClue) => {
-        const x = norm(w).replace(/ /g, '');
-        if (x.length < 3 || STOP.has(x) || titleWords.has(x)) return;
+      const ok = (w) => w.length >= 3 && !STOP.has(w) && !FILLER.has(w) && !titleWords.has(w);
+      const one = (w) => norm(w).replace(/ /g, '');
+      const tier = { kw: [], chars: [], people: [], places: [], plot: [], era: [], genre: [] };
+      const put = (list, w) => {
+        const x = one(w);
+        if (!ok(x)) return;
         related.add(x);
-        if (asClue && !clues.includes(x)) clues.push(x);
+        if (!list.includes(x)) list.push(x);
       };
+      // Keywords: the most telling word of each ("time travel" -> "travel")
       const kws = ((d.keywords && (d.keywords.keywords || d.keywords.results)) || []).map((k) => k.name);
       for (const k of kws) {
         const parts = norm(k).split(' ').filter((w) => w.length > 2 && !STOP.has(w));
-        parts.forEach((w) => add(w, false));
-        if (parts.length) add(parts.sort((a, b) => b.length - a.length)[0], true);
+        parts.forEach((w) => ok(w) && related.add(w));
+        const best = parts.filter(ok).sort((a, b) => b.length - a.length)[0];
+        if (best) put(tier.kw, best);
       }
-      for (const g of d.genres || []) norm(g.name).split(' ').forEach((w) => add(w, true));
-      const cast = ((d.credits && d.credits.cast) || []).slice(0, 4).map((c) => c.name);
+      // Characters' names ("Feluda", "Simran", "Raj"): strong but fair clues
+      const castList = (d.credits && d.credits.cast) || [];
+      for (const c of castList.slice(0, 5)) {
+        const ch = String(c.character || '').split(/[/(,]/)[0].trim();
+        if (!ch || /\b(himself|herself|self|narrator|voice)\b/i.test(ch)) continue;
+        const words = ch.split(/\s+/).filter((w) => /^[A-Z]/.test(w));
+        if (words.length) put(tier.chars, words.length > 1 && words[0].length <= 4 ? words[1] : words[0]);
+      }
+      // Director and leading actors, by surname
       const makers =
         item.mt === 'movie' ? ((d.credits && d.credits.crew) || []).filter((c) => c.job === 'Director').map((c) => c.name) : (d.created_by || []).map((c) => c.name);
-      for (const n of [...makers.slice(0, 1), ...cast.slice(0, 3)]) add(norm(n).split(' ').pop(), true);
-      const y = Number(item.year);
-      if (y) add(`${Math.floor(y / 10) * 10}s`, true);
-      // Spare words from the plot: names and places first (capitalised
-      // mid-sentence), then other words that aren't everyday filler
+      for (const n of [...makers.slice(0, 1), ...castList.slice(0, 3).map((c) => c.name)]) put(tier.people, norm(n).split(' ').pop());
+      // Places and names in the plot (capitalised mid-sentence), then other plot words
       const raw = String(d.overview || '');
-      const proper = [...raw.matchAll(/(?<![.!?]\s)(?<!^)\b([A-Z][a-z]{3,})\b/g)].map((m) => norm(m[1]));
-      const plot = [...proper, ...norm(raw).split(' ')].filter(
-        (w) => w.length >= 5 && !STOP.has(w) && !FILLER.has(w) && !titleWords.has(w),
-      );
-      plot.forEach((w) => add(w, false));
-      // Keyword clues are the most telling, so they come first, a little
-      // shuffled; words from the plot are spares for long games
-      const spare = [...new Set(plot)].filter((w) => !clues.includes(w)).slice(0, 12);
-      return { clues: [...mix(clues.slice(0, 6)), ...clues.slice(6)], spare, related };
+      [...raw.matchAll(/(?<![.!?]\s)(?<!^)\b([A-Z][a-z]{3,})\b/g)].forEach((m) => put(tier.places, m[1]));
+      norm(raw)
+        .split(' ')
+        .filter((w) => w.length >= 5)
+        .forEach((w) => put(tier.plot, w));
+      const y = Number(item.year);
+      if (y) put(tier.era, `${Math.floor(y / 10) * 10}s`);
+      for (const g of d.genres || []) norm(g.name).split(' ').forEach((w) => put(tier.genre, w));
+      // Best clues first: keywords, characters, places, people; genre words
+      // ("drama", "thriller") say little, so they come last
+      const order = [...mix(tier.kw.slice(0, 4)), ...tier.chars.slice(0, 2), ...tier.places.slice(0, 2), ...tier.people, ...tier.kw.slice(4), ...tier.chars.slice(2), ...tier.places.slice(2), ...tier.era];
+      const clues = [...new Set(order)];
+      const spare = [...new Set([...tier.plot, ...tier.genre])].filter((w) => !clues.includes(w)).slice(0, 12);
+      return { clues, spare, related };
     })();
     facts.set(key, p);
     p.catch(() => facts.delete(key));
@@ -176,7 +191,7 @@ export function impostorBots() {
   let s = null;
   let draft = '';
 
-  const CLUE_ROUNDS = players.length; // one clue round per player
+  const CLUE_ROUNDS = 3; // three clue rounds, whatever the number of players
   const clueOf = (cr, id) => s.clues[`${cr}:${id}`];
   const cluesBy = (id) => Array.from({ length: CLUE_ROUNDS }, (_, i) => clueOf(i + 1, id)).filter(Boolean);
 
@@ -371,7 +386,7 @@ export function impostorBots() {
 
   function finish() {
     s.phase = 'over';
-    const stole = s.guess && s.guess.id === s.title.id && s.guess.mt === s.title.mt;
+    const stole = Boolean(s.guess && titleMatch(s.guess.title, s.title.title));
     s.crewWins = caught() && !stole;
     s.stole = stole;
     for (const p of players) if ((p.id === s.impostor) !== s.crewWins) record.set(p.id, (record.get(p.id) || 0) + 1);
@@ -432,13 +447,15 @@ export function impostorBots() {
       html += `<div class="board-list">${players
         .map((p) => `<div class="board-row${s.impostor === p.id ? ' is-me' : ''}"><span class="board-name">${esc(p.name)}${s.impostor === p.id ? ' 🕵️' : ''}</span><span class="board-score">🗳 ${m.get(p.id) || 0}</span></div>`)
         .join('')}</div>`;
-      html += `<p class="imp-step">${esc(t('imp2.itWas', { name: nameOf(s.impostor), title: s.title.title }))}</p>`;
+      // The title stays hidden until the caught impostor has had their guess
+      html += `<p class="imp-step">${esc(s.phase === 'over' ? t('imp2.itWas', { name: nameOf(s.impostor), title: s.title.title }) : t('imp2.wasImp', { name: nameOf(s.impostor) }))}</p>`;
       if (s.phase === 'reveal') html += `<p class="muted">${esc(caught() ? t('imp2.caught') : t('imp2.escaped'))}</p>`;
       if (s.phase === 'guess') {
         if (s.impostor === ME)
-          html += `<p class="imp-step">${esc(t('imp2.lastChance'))}</p><div class="imp-votes">${s.choices
-            .map((c, i) => `<button class="btn btn-ghost" type="button" data-guess="${i}">${esc(c.title)} <span class="muted">${esc(c.year)}</span></button>`)
-            .join('')}</div>`;
+          html += `<p class="imp-step">${esc(t('imp2.lastChance'))}</p>
+            <form class="imp-form imp-guess"><input type="text" maxlength="80" autocomplete="off" list="imp-titles" placeholder="${esc(t('imp2.typeGuess'))}" aria-label="${esc(t('imp2.typeGuess'))}" />
+            <button class="btn" type="submit">${esc(t('imp2.guessBtn'))}</button></form>
+            <datalist id="imp-titles">${impostorTitleList().map((x) => `<option value="${esc(x)}"></option>`).join('')}</datalist>`;
         else html += `<p class="muted">${esc(t('imp2.guessing', { name: nameOf(s.impostor) }))}</p>`;
       }
       if (s.phase === 'over') {
@@ -449,7 +466,7 @@ export function impostorBots() {
       }
     }
     body.innerHTML = html;
-    const form = body.querySelector('.imp-form');
+    const form = body.querySelector('.imp-form:not(.imp-guess)');
     if (form) {
       const input = form.querySelector('input');
       if (focused) {
@@ -475,12 +492,15 @@ export function impostorBots() {
         step();
       }),
     );
-    body.querySelectorAll('[data-guess]').forEach((b) =>
-      b.addEventListener('click', () => {
-        s.guess = s.choices[Number(b.dataset.guess)];
+    const guessForm = body.querySelector('.imp-guess');
+    if (guessForm)
+      guessForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = guessForm.querySelector('input').value.trim();
+        if (!text) return;
+        s.guess = { title: text.slice(0, 80) };
         finish();
-      }),
-    );
+      });
     const again = body.querySelector('[data-deal]');
     if (again) again.addEventListener('click', deal);
   }

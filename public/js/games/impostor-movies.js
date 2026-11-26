@@ -35,3 +35,46 @@ export function impostorOptions(n = 42) {
   }
   return all.slice(0, n);
 }
+
+/** Every title once, for the suggestions list when the impostor types a guess */
+export function impostorTitleList() {
+  return Object.values(IMPOSTOR_MOVIES).flatMap((list) => list.map(([, title]) => title));
+}
+
+const squash = (s) =>
+  String(s || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/&/g, 'and')
+    .replace(/^\s*(the|a|an)\s+/, '')
+    .replace(/[^\p{L}\p{N}]+/gu, '');
+
+function distance(a, b) {
+  if (Math.abs(a.length - b.length) > 3) return 99;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i += 1) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j += 1) cur.push(Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+/**
+ * Is a typed guess the title? Forgives case, punctuation, "The", small typos,
+ * and accepts any of a title's names: "Sonar Kella (সোনার কেল্লা)" matches
+ * "sonar kella" or the Bengali; "Apur Sansar" also matches "The World of Apu".
+ */
+export function titleMatch(guess, title) {
+  const g = squash(guess);
+  if (g.length < 2) return false;
+  const names = [title, ...String(title).split(/[()/]/)].map((x) => x.trim()).filter(Boolean);
+  return names.some((n) => {
+    const t = squash(n);
+    if (!t) return false;
+    if (g === t) return true;
+    const slack = t.length >= 10 ? 2 : t.length >= 5 ? 1 : 0;
+    return distance(g, t) <= slack;
+  });
+}

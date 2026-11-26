@@ -9,13 +9,12 @@ import { t } from '../i18n.js';
 import * as db from '../data.js';
 import { track } from '../loading.js';
 import { esc, el, frag, toast } from '../ui.js';
-import { impostorOptions } from './impostor-movies.js';
+import { impostorOptions, impostorTitleList, titleMatch } from './impostor-movies.js';
 import { botsOffer } from './roomkit.js';
 import { botBrief, BOT_NAMES } from './bots.js';
 import { createRoom, joinRoom, getRoom, roomPeople, patchRoom, liveRoom, whilePresent, ensureRoomName, me, isRude, clean } from '../rooms.js';
 
-// One clue round per player: 4 players give 4 clues each
-const clueRoundsOf = (s) => Math.min(8, Math.max(2, Number(s.clueRounds) || (s.players || []).length || 2));
+const clueRoundsOf = () => 3; // three clue rounds, whatever the number of players
 const go = (href) => document.dispatchEvent(new CustomEvent('cinenjoy:navigate', { detail: href }));
 
 // Popular English, Hindi and Bengali films only (impostor-movies.js)
@@ -93,7 +92,7 @@ export function impostorRoom(roomId) {
 
   const st = () => room.state || {};
   const isHost = () => room.host_id === uid;
-  const botName = (id) => ((st().bots || []).find((b) => b.id === id) || {}).name || '🤖 Bot';
+  const botName = (id) => ((st().bots || []).find((b) => b.id === id) || {}).name || 'Bot 🤖';
   const nameOf = (id) => {
     if (isBot(id)) return botName(id);
     const p = people.find((x) => x.user_id === id);
@@ -248,7 +247,7 @@ export function impostorRoom(roomId) {
         const briefs = await track(Promise.all(picks.map((o) => botBrief(o).then((b) => ({ ...o, ...b })).catch(() => null))));
         const opts = briefs.filter((o) => o && o.words.length >= 3);
         const names = BOT_NAMES.slice().sort(() => Math.random() - 0.5);
-        bots = Array.from({ length: need }, (_, i) => ({ id: `bot:${i + 1}`, name: `🤖 ${names[i % names.length]}` }));
+        bots = Array.from({ length: need }, (_, i) => ({ id: `bot:${i + 1}`, name: `${names[i % names.length]} 🤖` }));
         const { error } = await sb.rpc('deal_impostor_bots', { rid: roomId, rnd: round, options: opts, bots: bots.map((b) => b.id) });
         if (error) throw error;
       } else {
@@ -256,7 +255,7 @@ export function impostorRoom(roomId) {
         if (error) throw error;
       }
       const players = [...humans, ...bots.map((b) => b.id)].sort(() => Math.random() - 0.5);
-      await patch({ phase: 'clues', round, clueRound: 1, players, bots, clueRounds: players.length });
+      await patch({ phase: 'clues', round, clueRound: 1, players, bots, clueRounds: 3 });
     } catch (err) {
       console.warn(err);
       const msg = String((err && err.message) || '');
@@ -273,6 +272,13 @@ export function impostorRoom(roomId) {
   }
 
   // ---------- Screens ----------
+
+  // The caught impostor types a guess (with suggestions from the film list)
+  function guessFormHtml() {
+    return `<form class="imp-form imp-guess"><input type="text" maxlength="80" autocomplete="off" list="imp-titles" placeholder="${esc(t('imp2.typeGuess'))}" aria-label="${esc(t('imp2.typeGuess'))}" />
+      <button class="btn" type="submit">${esc(t('imp2.guessBtn'))}</button></form>
+      <datalist id="imp-titles">${impostorTitleList().map((x) => `<option value="${esc(x)}"></option>`).join('')}</datalist>`;
+  }
 
   function cardHtml() {
     if (!card) return `<div class="imp-card is-watch"><p class="label">${esc(t('imp2.yourCard'))}</p><p>${esc(t('imp2.watching'))}</p></div>`;
@@ -338,19 +344,21 @@ export function impostorRoom(roomId) {
         html += `<div class="board-list">${players
           .map((p) => `<div class="board-row${answer && answer.impostor === p ? ' is-me' : ''}"><span class="board-name">${esc(nameOf(p))}${answer && answer.impostor === p ? ' 🕵️' : ''}</span><span class="board-score">🗳 ${tally.get(p) || 0}</span></div>`)
           .join('')}</div>`;
-        if (answer) html += `<p class="imp-step">${esc(t('imp2.itWas', { name: plainName(answer.impostor), title: answer.title.title }))}</p>`;
+        // The title stays hidden until the caught impostor has had their guess
+        if (answer)
+          html += `<p class="imp-step">${esc(s.phase === 'over' ? t('imp2.itWas', { name: plainName(answer.impostor), title: answer.title.title }) : t('imp2.wasImp', { name: plainName(answer.impostor) }))}</p>`;
         if (s.phase === 'reveal') html += `<p class="muted">${esc(caught() ? t('imp2.caught') : t('imp2.escaped'))}</p>`;
         if (s.phase === 'guess') {
           const g = movesOf('guess', s.round * 10)[0];
           if (card && card.role === 'impostor' && !g)
-            html += `<p class="imp-step">${esc(t('imp2.lastChance'))}</p><div class="imp-votes">${card.choices
-              .map((c, i) => `<button class="btn btn-ghost" type="button" data-guess="${i}">${esc(c.title)} <span class="muted">${esc(c.year)}</span></button>`)
-              .join('')}</div>`;
+            html += `<p class="imp-step">${esc(t('imp2.lastChance'))}</p>${guessFormHtml()}`;
           else html += `<p class="muted">${esc(t('imp2.guessing', { name: answer ? plainName(answer.impostor) : '' }))}</p>`;
         }
         if (s.phase === 'over' && answer) {
+          const gg = movesOf('guess', s.round * 10)[0];
+          if (gg) html += `<p class="muted">${esc(t('imp2.theyGuessed', { name: plainName(answer.impostor), title: gg.data.title }))}</p>`;
           const g = movesOf('guess', s.round * 10)[0];
-          const stole = g && g.data.title === answer.title.title;
+          const stole = Boolean(g && titleMatch(g.data.title, answer.title.title));
           const crewWins = caught() && !stole;
           html += `<p class="result-head">${esc(crewWins ? t('imp2.crewWins') : stole ? t('imp2.stole', { name: plainName(answer.impostor) }) : t('imp2.impostorWins', { name: plainName(answer.impostor) }))}</p>`;
           if (isHost()) html += `<button class="btn" type="button" data-deal>▶ ${esc(t('imp2.next'))}</button>`;
@@ -392,7 +400,7 @@ export function impostorRoom(roomId) {
     if (dealBtn) dealBtn.addEventListener('click', () => deal(dealBtn));
     const force = body.querySelector('[data-force]');
     if (force) force.addEventListener('click', () => hostStep(true));
-    const form = body.querySelector('.imp-form');
+    const form = body.querySelector('.imp-form:not(.imp-guess)');
     if (form) {
       const input = form.querySelector('input');
       input.addEventListener('input', () => (draft = input.value));
@@ -420,13 +428,18 @@ export function impostorRoom(roomId) {
         addMove('vote', st().round * 10, { target: b.dataset.vote }).catch(() => toast(t('errors.generic'), 'error'));
       }),
     );
-    body.querySelectorAll('[data-guess]').forEach((b) =>
-      b.addEventListener('click', () => {
-        const c = card.choices[Number(b.dataset.guess)];
-        body.querySelectorAll('[data-guess]').forEach((x) => (x.disabled = true));
-        addMove('guess', st().round * 10, { title: c.title }).catch(() => toast(t('errors.generic'), 'error'));
-      }),
-    );
+    const guessForm = body.querySelector('.imp-guess');
+    if (guessForm)
+      guessForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = guessForm.querySelector('input').value.trim();
+        if (!text) return;
+        guessForm.querySelector('button').disabled = true;
+        addMove('guess', st().round * 10, { title: text.slice(0, 80) }).catch(() => {
+          guessForm.querySelector('button').disabled = false;
+          toast(t('errors.generic'), 'error');
+        });
+      });
   }
 
   load(true);
