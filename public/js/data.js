@@ -28,7 +28,18 @@ export function currentUser() {
     userP = (async () => {
       const sb = await client();
       const { data } = await sb.auth.getSession();
-      if (data.session) return data.session.user;
+      if (data.session) {
+        // A saved sign-in can outlive its account (for example one made while
+        // the database was paused or being restored). Then every save fails
+        // with a foreign-key error, so check once and start a fresh guest
+        // session if the account is gone. A network error keeps the session.
+        const check = await sb.auth.getUser();
+        const err = check.error;
+        const gone = err && (err.code === 'user_not_found' || /does not exist|not found/i.test(err.message || ''));
+        if (!gone) return data.session.user;
+        console.warn('Saved account no longer exists; starting a new guest session');
+        await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+      }
       const res = await sb.auth.signInAnonymously();
       if (res.error) throw res.error;
       return res.data.user;
