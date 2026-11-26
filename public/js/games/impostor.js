@@ -360,7 +360,7 @@ export function impostorRoom(roomId) {
           const g = movesOf('guess', s.round * 10)[0];
           const stole = Boolean(g && titleMatch(g.data.title, answer.title.title));
           const crewWins = caught() && !stole;
-          html += `<p class="result-head">${esc(crewWins ? t('imp2.crewWins') : stole ? t('imp2.stole', { name: plainName(answer.impostor) }) : t('imp2.impostorWins', { name: plainName(answer.impostor) }))}</p>`;
+          html += `<p class="result-head">${esc(crewWins ? t('imp2.crewWins') : stole ? (answer.impostor === uid ? t('imp2.youStole') : t('imp2.stole', { name: plainName(answer.impostor) })) : answer.impostor === uid ? t('imp2.youFooled') : t('imp2.impostorWins', { name: plainName(answer.impostor) }))}</p>`;
           if (isHost()) html += `<button class="btn" type="button" data-deal>▶ ${esc(t('imp2.next'))}</button>`;
           if (saved !== s.round && inRound) {
             saved = s.round;

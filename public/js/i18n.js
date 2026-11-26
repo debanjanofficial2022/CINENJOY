@@ -250,7 +250,7 @@ const dict = {
       crewNote: 'Give clues that show you know it, without making it easy for the impostor.', clueStep: 'Clue round {n} of {of}: one word each', oneWord: 'One word', send: 'Send',
       waitOthers: 'Waiting for the others…', clueN: 'Clue {n}', voteStep: 'Who is the impostor?', voted: '{n} of {of} have voted',
       itWas: 'The impostor was {name}. The title: {title}.', caught: 'Caught!', escaped: 'The impostor got away.', lastChance: "You've been caught. One guess: which title was it?",
-      guessing: '{name} is guessing the title…', crewWins: 'The crew wins!', stole: '{name} was caught but guessed the title: the impostor wins!', impostorWins: '{name} fooled everyone: the impostor wins!',
+      guessing: '{name} is guessing the title…', crewWins: 'The crew wins!', stole: '{name} was caught but guessed the title: the impostor wins!', youStole: 'You were caught but guessed the title: you win!', youFooled: 'You fooled everyone: you win!', impostorWins: '{name} fooled everyone: the impostor wins!',
       next: 'Next round', moveOn: "Don't wait any longer", rude: 'Please choose another word.', tooEasy: "That's a word from the title. Try a harder clue.",
     },
     ep: {
@@ -619,7 +619,7 @@ const dict = {
       crewNote: '给出能证明你知道片名的线索，但别让卧底轻易猜到。', clueStep: '第 {n}/{of} 轮线索：每人一个词', oneWord: '一个词', send: '发送',
       waitOthers: '等待其他人…', clueN: '线索 {n}', voteStep: '谁是卧底？', voted: '{n}/{of} 人已投票',
       itWas: '卧底是 {name}。片名是：{title}。', caught: '抓到了！', escaped: '卧底逃脱了。', lastChance: '你被抓到了。猜一次：片名是哪一个？',
-      guessing: '{name} 正在猜片名…', crewWins: '平民获胜！', stole: '{name} 被抓到了，但猜对了片名：卧底获胜！', impostorWins: '{name} 骗过了所有人：卧底获胜！',
+      guessing: '{name} 正在猜片名…', crewWins: '平民获胜！', stole: '{name} 被抓到了，但猜对了片名：卧底获胜！', youStole: '你被抓到了，但猜对了片名：你赢了！', youFooled: '你骗过了所有人：你赢了！', impostorWins: '{name} 骗过了所有人：卧底获胜！',
       next: '下一局', moveOn: '不再等待', rude: '请换一个词。', tooEasy: '这是片名里的词，换个难一点的线索吧。',
     },
     ep: {
@@ -988,7 +988,7 @@ const dict = {
       crewNote: 'Da pistas que demuestren que lo conoces, sin ponérselo fácil al impostor.', clueStep: 'Ronda de pistas {n} de {of}: una palabra cada uno', oneWord: 'Una palabra', send: 'Enviar',
       waitOthers: 'Esperando a los demás…', clueN: 'Pista {n}', voteStep: '¿Quién es el impostor?', voted: '{n} de {of} han votado',
       itWas: 'El impostor era {name}. El título: {title}.', caught: '¡Atrapado!', escaped: 'El impostor se escapó.', lastChance: 'Te han atrapado. Una oportunidad: ¿qué título era?',
-      guessing: '{name} está adivinando el título…', crewWins: '¡Gana el equipo!', stole: '{name} fue atrapado pero adivinó el título: ¡gana el impostor!', impostorWins: '{name} engañó a todos: ¡gana el impostor!',
+      guessing: '{name} está adivinando el título…', crewWins: '¡Gana el equipo!', stole: '{name} fue atrapado pero adivinó el título: ¡gana el impostor!', youStole: 'Te atraparon, pero adivinaste el título: ¡ganas!', youFooled: 'Engañaste a todos: ¡ganas!', impostorWins: '{name} engañó a todos: ¡gana el impostor!',
       next: 'Siguiente ronda', moveOn: 'No esperar más', rude: 'Elige otra palabra, por favor.', tooEasy: 'Esa palabra está en el título. Prueba una pista más difícil.',
     },
     ep: {

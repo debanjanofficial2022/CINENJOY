@@ -464,7 +464,7 @@ export function impostorBots() {
       }
       if (s.phase === 'over') {
         if (s.guess) html += `<p class="muted">${esc(t('bots.guessed', { name: nameOf(s.impostor), title: s.guess.title }))}</p>`;
-        html += `<p class="result-head">${esc(s.crewWins ? t('imp2.crewWins') : s.stole ? t('imp2.stole', { name: nameOf(s.impostor) }) : t('imp2.impostorWins', { name: nameOf(s.impostor) }))}</p>`;
+        html += `<p class="result-head">${esc(s.crewWins ? t('imp2.crewWins') : s.stole ? (s.impostor === ME ? t('imp2.youStole') : t('imp2.stole', { name: nameOf(s.impostor) })) : s.impostor === ME ? t('imp2.youFooled') : t('imp2.impostorWins', { name: nameOf(s.impostor) }))}</p>`;
         html += `<h2 class="group-title">${esc(t('bots.roundsWon'))}</h2>${scoreList(players, record)}`;
         html += `<button class="btn" type="button" data-deal>▶ ${esc(t('imp2.next'))}</button>`;
       }
