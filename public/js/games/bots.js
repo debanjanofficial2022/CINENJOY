@@ -82,6 +82,10 @@ function scoreList(players, scores) {
 const STOP = new Set(
   'the a an and or of in on at to for with from by into over after before about his her their its this that these those who what when where which while is are was were be been being has have had not but as it he she they them him you your our we us one two three new old based film movie series story life man woman'.split(' '),
 );
+// Everyday words that make poor clues
+const FILLER = new Set(
+  'about above across after again against along among another around become becomes before begin begins behind being below beneath beside between beyond bring brings career cause comes could daily decide decides despite discover discovers during early either every everything events except family finally finds first follows former friend friends front getting given gives going great group having heart himself herself however instead itself journey later least leave leaves little lives living local makes making might moment months never other others otherwise people perhaps place plans point power quickly rather really recounts returns right second seems sets several should since someone something soon start starts still story strange street takes taking their themselves there these thing things those though three through times together toward trying turns under unless until upon using village wants where wherein whether which while whole whose within without world would years young ordinary memorable unexpected'.split(' '),
+);
 const facts = new Map();
 async function factsOf(item) {
   const key = `${item.mt}/${item.id}`;
@@ -113,9 +117,13 @@ async function factsOf(item) {
       for (const n of [...makers.slice(0, 1), ...cast.slice(0, 3)]) add(norm(n).split(' ').pop(), true);
       const y = Number(item.year);
       if (y) add(`${Math.floor(y / 10) * 10}s`, true);
-      const plot = norm(d.overview)
-        .split(' ')
-        .filter((w) => w.length >= 5 && !STOP.has(w) && !titleWords.has(w));
+      // Spare words from the plot: names and places first (capitalised
+      // mid-sentence), then other words that aren't everyday filler
+      const raw = String(d.overview || '');
+      const proper = [...raw.matchAll(/(?<![.!?]\s)(?<!^)\b([A-Z][a-z]{3,})\b/g)].map((m) => norm(m[1]));
+      const plot = [...proper, ...norm(raw).split(' ')].filter(
+        (w) => w.length >= 5 && !STOP.has(w) && !FILLER.has(w) && !titleWords.has(w),
+      );
       plot.forEach((w) => add(w, false));
       // Keyword clues are the most telling, so they come first, a little
       // shuffled; words from the plot are spares for long games
