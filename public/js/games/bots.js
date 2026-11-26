@@ -158,9 +158,9 @@ export function impostorBots() {
   let s = null;
   let draft = '';
 
-  const CLUE_ROUNDS = 2;
+  const CLUE_ROUNDS = players.length; // one clue round per player
   const clueOf = (cr, id) => s.clues[`${cr}:${id}`];
-  const cluesBy = (id) => [1, 2].map((cr) => clueOf(cr, id)).filter(Boolean);
+  const cluesBy = (id) => Array.from({ length: CLUE_ROUNDS }, (_, i) => clueOf(i + 1, id)).filter(Boolean);
 
   async function deal() {
     clearAll();

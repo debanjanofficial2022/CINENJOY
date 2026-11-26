@@ -1534,7 +1534,7 @@ a.link-btn { color: var(--muted); }
 .imp-step { font-weight: 600; margin: 4px 0 0; }
 .imp-form { display: flex; gap: 8px; }
 .imp-form input { flex: 1; font-size: 16px; }
-.imp-clues { width: 100%; border-collapse: collapse; font-size: 15px; }
+.imp-clues { width: 100%; border-collapse: collapse; font-size: 15px; display: block; overflow-x: auto; }
 .imp-clues th, .imp-clues td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
 .imp-clues thead th { color: var(--muted); font-weight: 500; font-size: 13px; }
 .imp-votes { display: flex; flex-wrap: wrap; gap: 8px; }

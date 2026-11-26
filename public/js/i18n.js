@@ -242,7 +242,7 @@ const dict = {
     imp2: {
       name: 'Movie Impostor', lead: 'A party game for 3 or more friends. Everyone knows the secret title, except the impostor.',
       rule1: 'Everyone gets a card with the same hit film: English, Hindi or Bengali. One player instead learns they are the impostor.',
-      rule2: 'Take turns giving one-word clues, twice round. Prove you know the title, but don\'t give it away.',
+      rule2: 'Give one-word clues: as many rounds as there are players. Prove you know the title, but don\'t give it away.',
       rule3: 'Vote for who you think the impostor is. If most votes land on the impostor, they are caught.',
       rule4: 'A caught impostor gets one guess at the title. Guess right, and they still win.',
       newRoom: 'Start a room', join: 'Join a room', lobbyLead: 'Send friends the link. You need at least 3 players.', start: 'Deal the cards', needThree: 'You need at least 3 players.',
@@ -611,7 +611,7 @@ const dict = {
     imp2: {
       name: '电影卧底', lead: '适合 3 人以上的派对游戏。大家都知道秘密片名，只有卧底不知道。',
       rule1: '每人拿到一张写着同一部热门电影的卡片（英语、印地语或孟加拉语），只有一个人会得知自己是卧底。',
-      rule2: '轮流说一个词作为线索，共两轮。要证明你知道片名，但别说得太明显。',
+      rule2: '每人说一个词作为线索，有几位玩家就进行几轮。要证明你知道片名，但别说得太明显。',
       rule3: '投票选出你认为的卧底。得票最多的人如果是卧底，卧底就被抓到了。',
       rule4: '被抓到的卧底还有一次猜片名的机会。猜对了，卧底依然获胜。',
       newRoom: '创建房间', join: '加入房间', lobbyLead: '把链接发给朋友，至少需要 3 名玩家。', start: '发牌', needThree: '至少需要 3 名玩家。',
@@ -980,7 +980,7 @@ const dict = {
     imp2: {
       name: 'Impostor de cine', lead: 'Un juego para 3 o más amigos. Todos conocen el título secreto, menos el impostor.',
       rule1: 'Todos reciben una carta con la misma película taquillera: en inglés, hindi o bengalí. Un jugador descubre que es el impostor.',
-      rule2: 'Por turnos, da una pista de una palabra, dos rondas. Demuestra que lo conoces sin regalarlo.',
+      rule2: 'Da pistas de una palabra: tantas rondas como jugadores. Demuestra que lo conoces sin regalarlo.',
       rule3: 'Votad quién creéis que es el impostor. Si la mayoría vota al impostor, queda atrapado.',
       rule4: 'El impostor atrapado puede adivinar el título una vez. Si acierta, gana igualmente.',
       newRoom: 'Crear sala', join: 'Unirse a una sala', lobbyLead: 'Envía el enlace a tus amigos. Hacen falta al menos 3 jugadores.', start: 'Repartir cartas', needThree: 'Hacen falta al menos 3 jugadores.',

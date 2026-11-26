@@ -10,7 +10,8 @@ import { impostorOptions } from './impostor-movies.js';
 import { botsOffer } from './roomkit.js';
 import { createRoom, joinRoom, getRoom, roomPeople, patchRoom, liveRoom, whilePresent, ensureRoomName, me, isRude, clean } from '../rooms.js';
 
-const CLUE_ROUNDS = 2;
+// One clue round per player: 4 players give 4 clues each
+const clueRoundsOf = (s) => Math.min(8, Math.max(2, Number(s.clueRounds) || (s.players || []).length || 2));
 const go = (href) => document.dispatchEvent(new CustomEvent('cinenjoy:navigate', { detail: href }));
 
 // Popular English, Hindi and Bengali films only (impostor-movies.js)
@@ -169,7 +170,7 @@ export function impostorRoom(roomId) {
     if (s.phase === 'clues') {
       const done = movesOf('clue', s.round * 10 + s.clueRound).map((m) => m.user_id);
       if (force || players.every((p) => done.includes(p))) {
-        patch(s.clueRound < CLUE_ROUNDS ? { clueRound: s.clueRound + 1 } : { phase: 'vote' });
+        patch(s.clueRound < clueRoundsOf(s) ? { clueRound: s.clueRound + 1 } : { phase: 'vote' });
       }
     } else if (s.phase === 'vote') {
       const done = movesOf('vote', s.round * 10).map((m) => m.user_id);
@@ -191,7 +192,7 @@ export function impostorRoom(roomId) {
       const { error } = await sb.rpc('deal_impostor', { rid: roomId, rnd: round, options: options() });
       if (error) throw error;
       const players = people.map((p) => p.user_id);
-      await patch({ phase: 'clues', round, clueRound: 1, players });
+      await patch({ phase: 'clues', round, clueRound: 1, players, clueRounds: players.length });
     } catch (err) {
       console.warn(err);
       toast(/3 players/.test(err.message || '') ? t('imp2.needThree') : t('errors.generic'), 'error');
@@ -221,7 +222,7 @@ export function impostorRoom(roomId) {
     const rows = players
       .map((p) => {
         const cells = [];
-        for (let c = 1; c <= CLUE_ROUNDS; c += 1) {
+        for (let c = 1; c <= clueRoundsOf(s); c += 1) {
           const m = movesOf('clue', s.round * 10 + c).find((x) => x.user_id === p);
           const hidden = false; // clues show as soon as each player gives one
           cells.push(`<td>${m ? (hidden ? '✓' : esc(clean(m.data.word))) : c <= (s.clueRound || 0) || s.phase !== 'clues' ? '<span class="muted">…</span>' : ''}</td>`);
@@ -229,7 +230,7 @@ export function impostorRoom(roomId) {
         return `<tr><th>${esc(nameOf(p))}${online.has(p) ? ' <span class="dot-on">●</span>' : ''}</th>${cells.join('')}</tr>`;
       })
       .join('');
-    return `<table class="imp-clues"><thead><tr><th></th>${Array.from({ length: CLUE_ROUNDS }, (_, i) => `<th>${esc(t('imp2.clueN', { n: i + 1 }))}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+    return `<table class="imp-clues"><thead><tr><th></th>${Array.from({ length: clueRoundsOf(s) }, (_, i) => `<th>${esc(t('imp2.clueN', { n: i + 1 }))}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function render() {
@@ -252,7 +253,7 @@ export function impostorRoom(roomId) {
       html = cardHtml();
       if (s.phase === 'clues') {
         const mine = movesOf('clue', s.round * 10 + s.clueRound).find((m) => m.user_id === uid);
-        html += `<p class="imp-step">${esc(t('imp2.clueStep', { n: s.clueRound, of: CLUE_ROUNDS }))}</p>`;
+        html += `<p class="imp-step">${esc(t('imp2.clueStep', { n: s.clueRound, of: clueRoundsOf(s) }))}</p>`;
         if (inRound && !mine)
           html += `<form class="imp-form"><input type="text" maxlength="24" autocomplete="off" placeholder="${esc(t('imp2.oneWord'))}" aria-label="${esc(t('imp2.oneWord'))}" value="${esc(draft)}" />
             <button class="btn" type="submit">${esc(t('imp2.send'))}</button></form>`;
