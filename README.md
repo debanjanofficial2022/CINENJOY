@@ -65,6 +65,7 @@ supabase/rooms.sql      friend rooms, Movie Night votes and room reports
 supabase/moves.sql      moves in game rooms (quiz answers, clues, votes); allows the newer game names
 supabase/secrets.sql    cards dealt by the database in Movie Impostor (each player reads only their own)
 supabase/pictionary.sql CinePictionary: the drawer's title and guesses checked by the database
+supabase/pictionary2.sql CinePictionary v2: pick one of three titles, chat guessing, hint letters (run after pictionary.sql)
 public/js/games/        the games, their data and shared game code
 vercel.json             Vercel settings
 ```
@@ -88,7 +89,8 @@ vercel.json             Vercel settings
 - **Higher or Lower** (`js/games/higher.js`): rating, box office, running time or episode count, from TMDB. Practice is an endless streak; a challenge link stores one 25-title run so friends get the same questions.
 - **Six Degrees** (`js/games/degrees.js`): link the leads of two well-known films through titles and casts from TMDB (`person/…/combined_credits`, `…/credits`); six links at most.
 - **Poster Reveal** (`js/games/poster.js`): a friend-room race; a poster uncovers tile by tile over 25 seconds and the first right answer takes the round.
-- **CinePictionary** (`js/games/pictionary.js`, `supabase/pictionary.sql`): each player draws a secret title once. Strokes travel as Realtime broadcast messages and are never stored. The database deals the title to the drawer only and checks every guess (`pictionary_guess`), so nobody can read the answer early.
+- **CinePictionary** (`js/games/pictionary.js`, `supabase/pictionary2.sql`): a draw-and-guess layout with players and scores on the left, the board in the middle with the hidden title above it, and a chat on the right. The host sets rounds and draw time; each turn the drawer picks one of three titles (`px_deal`, `px_choose`); everyone else types guesses in the chat, which the database checks (`px_say`: right answers are never shown, near misses are flagged only to the sender, and the drawer and solved players can't type the title). Hint letters appear at 45, 65 and 85% of the time (`px_hint`, at most a third of the letters). Tools: 26 colours, 4 brush sizes, fill, eraser, undo, clear. Strokes stream as Realtime broadcast messages while drawn and are never stored. Faster guesses score more; the drawer scores by the share of players who got it.
+- **Keeping the database awake:** `.github/workflows/keep-supabase-awake.yml` reads one row every 3 days, because free Supabase projects pause after a week with no activity.
 - Room games share `js/games/roomkit.js` (start page, join link, live room).
 - **Practice with bots** (`js/games/bots.js`, `/games/impostor/practice`, `/games/poster/practice`, `/games/pictionary/practice`): the room games played on your own device against bots, with nothing saved. Linked from each game's page and from a room lobby while there aren't enough players. Impostor bots clue from TMDB keywords, genres, cast, director and decade, and vote for whoever's clues fit the title least; Poster Reveal bots buzz in after a while; in CinePictionary a bot sketches the outlines of a still from its title, and on your turn the bots guess on a timer that speeds up as you draw (they can't see the drawing).
 - The smaller daily games share one frame (`js/games/shell.js`) for daily, practice and challenge puzzles, saving and the result sheet.
