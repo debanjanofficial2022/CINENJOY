@@ -6,21 +6,15 @@ import { t } from '../i18n.js';
 import * as db from '../data.js';
 import { track } from '../loading.js';
 import { esc, el, frag, toast } from '../ui.js';
-import { FRAMES } from './frame-data.js';
+import { impostorOptions } from './impostor-movies.js';
 import { botsOffer } from './roomkit.js';
 import { createRoom, joinRoom, getRoom, roomPeople, patchRoom, liveRoom, whilePresent, ensureRoomName, me, isRude, clean } from '../rooms.js';
 
 const CLUE_ROUNDS = 2;
 const go = (href) => document.dispatchEvent(new CustomEvent('cinenjoy:navigate', { detail: href }));
 
-function options() {
-  const pool = FRAMES.map(([tv, id, title, year]) => ({ title, year, mt: tv ? 'tv' : 'movie', id }));
-  for (let i = pool.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, 40);
-}
+// Popular English, Hindi and Bengali films only (impostor-movies.js)
+const options = () => impostorOptions(42);
 
 export function impostorHome() {
   const node = el(`<section class="page game impostor">

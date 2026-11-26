@@ -16,6 +16,7 @@ import * as tmdb from '../tmdb.js';
 import { TMDB_IMG } from '../config.js';
 import { esc, el, toast } from '../ui.js';
 import { FRAMES } from './frame-data.js';
+import { impostorPool } from './impostor-movies.js';
 import { shuffle, hashString, rng } from './common.js';
 import { titlePicker } from './picker.js';
 import { isRude, clean } from '../rooms.js';
@@ -164,7 +165,7 @@ export function impostorBots() {
   async function deal() {
     clearAll();
     body.innerHTML = `<div class="loading-box"><span class="spinner"></span>${esc(t('ui.loading'))}</div>`;
-    const all = mix(titles());
+    const all = mix(impostorPool());
     let title = null;
     let info = null;
     for (const cand of all.slice(0, 6)) {
