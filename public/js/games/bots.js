@@ -330,7 +330,7 @@ export function impostorBots() {
         const cells = [];
         for (let c = 1; c <= CLUE_ROUNDS; c += 1) {
           const w = clueOf(c, p.id);
-          const hidden = s.phase === 'clues' && c === s.clueRound && w && p.id !== ME && !players.every((x) => clueOf(c, x.id));
+          const hidden = false; // clues show as soon as each player gives one
           cells.push(`<td>${w ? (hidden ? '✓' : esc(clean(w))) : c <= s.clueRound || s.phase !== 'clues' ? '<span class="muted">…</span>' : ''}</td>`);
         }
         return `<tr><th>${esc(p.name)}</th>${cells.join('')}</tr>`;

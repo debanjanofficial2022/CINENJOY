@@ -223,7 +223,7 @@ export function impostorRoom(roomId) {
         const cells = [];
         for (let c = 1; c <= CLUE_ROUNDS; c += 1) {
           const m = movesOf('clue', s.round * 10 + c).find((x) => x.user_id === p);
-          const hidden = s.phase === 'clues' && c === s.clueRound && m && p !== uid;
+          const hidden = false; // clues show as soon as each player gives one
           cells.push(`<td>${m ? (hidden ? '✓' : esc(clean(m.data.word))) : c <= (s.clueRound || 0) || s.phase !== 'clues' ? '<span class="muted">…</span>' : ''}</td>`);
         }
         return `<tr><th>${esc(nameOf(p))}${online.has(p) ? ' <span class="dot-on">●</span>' : ''}</th>${cells.join('')}</tr>`;
