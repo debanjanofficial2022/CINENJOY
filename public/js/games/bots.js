@@ -113,18 +113,28 @@ async function factsOf(item) {
       for (const n of [...makers.slice(0, 1), ...cast.slice(0, 3)]) add(norm(n).split(' ').pop(), true);
       const y = Number(item.year);
       if (y) add(`${Math.floor(y / 10) * 10}s`, true);
-      norm(d.overview)
+      const plot = norm(d.overview)
         .split(' ')
-        .filter((w) => w.length >= 5)
-        .forEach((w) => add(w, false));
-      // Keyword clues are the most telling, so they come first, a little shuffled
-      return { clues: [...mix(clues.slice(0, 6)), ...clues.slice(6)], related };
+        .filter((w) => w.length >= 5 && !STOP.has(w) && !titleWords.has(w));
+      plot.forEach((w) => add(w, false));
+      // Keyword clues are the most telling, so they come first, a little
+      // shuffled; words from the plot are spares for long games
+      const spare = [...new Set(plot)].filter((w) => !clues.includes(w)).slice(0, 12);
+      return { clues: [...mix(clues.slice(0, 6)), ...clues.slice(6)], spare, related };
     })();
     facts.set(key, p);
     p.catch(() => facts.delete(key));
   }
   return facts.get(key);
 }
+
+/** Clue words and related words for a title, for the database's bots. */
+export async function botBrief(item) {
+  const f = await factsOf(item);
+  return { words: [...f.clues, ...(f.spare || [])].slice(0, 24), rel: [...f.related].slice(0, 90) };
+}
+
+export const BOT_NAMES = NAMES;
 
 /** How many of these words fit what we know about a title. */
 function fit(words, related) {
@@ -225,13 +235,53 @@ export function impostorBots() {
         if (!s || s.round !== round || s.phase !== 'clues' || s.clueRound !== cr) return;
         let word;
         if (b.id === s.impostor) word = await impostorBotClue();
-        else word = s.info.clues.find((w) => !s.used.has(w)) || pickOne(VAGUE);
+        else word = crewBotClue();
         if (!s || s.round !== round || s.clueRound !== cr) return;
         s.used.add(word);
         s.clues[`${cr}:${b.id}`] = word;
         step();
-      }, rand(1200, 4200));
+        // The impostor bot usually waits to hear a few clues first
+      }, b.id === s.impostor && Math.random() < 0.75 ? rand(3800, 6000) : rand(1200, 4200));
     }
+  }
+
+  // A crew bot reads the clues so far: if they already point clearly at the
+  // title it gives a subtler word, so the impostor learns little; if they
+  // are vague, it gives a strong one.
+  function crewBotClue() {
+    const all = players.flatMap((p) => cluesBy(p.id));
+    const words = [...s.info.clues, ...(s.info.spare || [])].filter((w) => !s.used.has(w));
+    if (!words.length) {
+      const fresh = VAGUE.filter((w) => !s.used.has(w));
+      return pickOne(fresh.length ? fresh : VAGUE);
+    }
+    const obvious = all.length && fit(all, s.info.related) >= Math.max(2, all.length * 0.5);
+    if (obvious) {
+      const subtle = words.filter((w) => s.info.clues.indexOf(w) > 4 || !s.info.clues.includes(w));
+      if (subtle.length) return pickOne(subtle);
+    }
+    return words[0];
+  }
+
+  // The impostor bot votes like a crew member would: against whoever's clues
+  // fit its best guess at the title least
+  async function impostorBotVote(b, others) {
+    const crewWords = players.filter((p) => p.id !== b.id).flatMap((p) => cluesBy(p.id));
+    let best = null;
+    let bestFit = -1;
+    for (const c of s.choices) {
+      const f = await factsOf(c).catch(() => null);
+      if (!f) continue;
+      const v = fit(crewWords, f.related) + Math.random() * 0.3;
+      if (v > bestFit) {
+        bestFit = v;
+        best = f;
+      }
+    }
+    if (!best) return pickOne(others).id;
+    const scored = others.map((p) => [p.id, fit(cluesBy(p.id), best.related) + Math.random() * 0.5]);
+    scored.sort((a, c) => a[1] - c[1]);
+    return scored[0][0];
   }
 
   function step() {
@@ -265,16 +315,18 @@ export function impostorBots() {
   function botVotes() {
     const round = s.round;
     for (const b of bots) {
-      later(() => {
+      later(async () => {
         if (!s || s.round !== round || s.phase !== 'vote') return;
         const others = players.filter((p) => p.id !== b.id);
         let target;
-        if (b.id === s.impostor || Math.random() < 0.2) target = pickOne(others).id;
+        if (b.id === s.impostor) target = await impostorBotVote(b, others);
+        else if (Math.random() < 0.15) target = pickOne(others).id;
         else {
           const scored = others.map((p) => [p.id, fit(cluesBy(p.id), s.info.related) + Math.random() * 0.5]);
           scored.sort((a, c) => a[1] - c[1]);
           target = scored[0][0];
         }
+        if (!s || s.round !== round || s.phase !== 'vote') return;
         s.votes[b.id] = target;
         step();
       }, rand(1500, 4500));

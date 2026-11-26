@@ -1,13 +1,17 @@
 // Movie Impostor: a friend-room game. Everyone gets the same secret title
-// except one player, the impostor. Each gives a one-word clue, twice, then
-// everyone votes. If the impostor is caught, they get one guess at the title.
-// The database deals the cards (supabase/secrets.sql).
+// except one player, the impostor. Each gives a one-word clue per round (as
+// many rounds as players), then everyone votes. If the impostor is caught,
+// they get one guess at the title, and win anyway if it is right.
+// The database deals the cards (supabase/secrets.sql). Rooms with 2 to 4
+// people are topped up to 5 with bots that the database plays
+// (supabase/impostor_bots.sql), so nobody can see what the bots know.
 import { t } from '../i18n.js';
 import * as db from '../data.js';
 import { track } from '../loading.js';
 import { esc, el, frag, toast } from '../ui.js';
 import { impostorOptions } from './impostor-movies.js';
 import { botsOffer } from './roomkit.js';
+import { botBrief, BOT_NAMES } from './bots.js';
 import { createRoom, joinRoom, getRoom, roomPeople, patchRoom, liveRoom, whilePresent, ensureRoomName, me, isRude, clean } from '../rooms.js';
 
 // One clue round per player: 4 players give 4 clues each
@@ -16,6 +20,11 @@ const go = (href) => document.dispatchEvent(new CustomEvent('cinenjoy:navigate',
 
 // Popular English, Hindi and Bengali films only (impostor-movies.js)
 const options = () => impostorOptions(42);
+// Rooms with fewer people than this are topped up with bots, which the
+// database plays (supabase/impostor_bots.sql)
+const MIN_PLAYERS = 5;
+const isBot = (id) => typeof id === 'string' && id.startsWith('bot:');
+const actor = (m) => (m.data && m.data.bot) || m.user_id;
 
 export function impostorHome() {
   const node = el(`<section class="page game impostor">
@@ -84,11 +93,14 @@ export function impostorRoom(roomId) {
 
   const st = () => room.state || {};
   const isHost = () => room.host_id === uid;
+  const botName = (id) => ((st().bots || []).find((b) => b.id === id) || {}).name || '🤖 Bot';
   const nameOf = (id) => {
+    if (isBot(id)) return botName(id);
     const p = people.find((x) => x.user_id === id);
     return p ? (p.me ? t('wl.you') : p.name || t('wl.friend')) : t('wl.friend');
   };
   const plainName = (id) => {
+    if (isBot(id)) return botName(id);
     const p = people.find((x) => x.user_id === id);
     return (p && p.name) || t('wl.friend');
   };
@@ -164,16 +176,53 @@ export function impostorRoom(roomId) {
     return top > 0 && leaders.length === 1 && leaders[0] === answer.impostor;
   }
 
+  // The database plays the bots; the host's page just nudges it every second
+  // or two so the bots answer at a human pace
+  let botTimer = null;
+  let botBusy = false;
+  function driveBots() {
+    const s = st();
+    const bots = (s.bots || []).map((b) => b.id);
+    if (!bots.length || botTimer || botBusy) return;
+    let waiting = false;
+    if (s.phase === 'clues') {
+      const done = movesOf('clue', s.round * 10 + s.clueRound).map(actor);
+      waiting = bots.some((b) => !done.includes(b));
+    } else if (s.phase === 'vote') {
+      const done = movesOf('vote', s.round * 10).map(actor);
+      waiting = bots.some((b) => !done.includes(b));
+    } else if (s.phase === 'guess') {
+      waiting = answer && isBot(answer.impostor) && !movesOf('guess', s.round * 10).length;
+    }
+    if (!waiting) return;
+    botTimer = setTimeout(async () => {
+      botTimer = null;
+      if (!node.isConnected) return;
+      botBusy = true;
+      try {
+        const { sb } = await db.supa();
+        const { error } = await sb.rpc('impostor_bot_turn', { rid: roomId, rnd: st().round });
+        if (error) throw error;
+      } catch (err) {
+        console.warn(err);
+      } finally {
+        botBusy = false;
+      }
+      load();
+    }, 1200 + Math.random() * 1800);
+  }
+
   function hostStep(force = false) {
     const s = st();
     const players = s.players || [];
+    driveBots();
     if (s.phase === 'clues') {
-      const done = movesOf('clue', s.round * 10 + s.clueRound).map((m) => m.user_id);
+      const done = movesOf('clue', s.round * 10 + s.clueRound).map(actor);
       if (force || players.every((p) => done.includes(p))) {
         patch(s.clueRound < clueRoundsOf(s) ? { clueRound: s.clueRound + 1 } : { phase: 'vote' });
       }
     } else if (s.phase === 'vote') {
-      const done = movesOf('vote', s.round * 10).map((m) => m.user_id);
+      const done = movesOf('vote', s.round * 10).map(actor);
       if (force || players.every((p) => done.includes(p))) patch({ phase: 'reveal' });
     } else if (s.phase === 'reveal' && answer) {
       setTimeout(() => {
@@ -189,13 +238,29 @@ export function impostorRoom(roomId) {
     try {
       const { sb } = await db.supa();
       const round = (st().round || 0) + 1;
-      const { error } = await sb.rpc('deal_impostor', { rid: roomId, rnd: round, options: options() });
-      if (error) throw error;
-      const players = people.map((p) => p.user_id);
-      await patch({ phase: 'clues', round, clueRound: 1, players, clueRounds: players.length });
+      const humans = people.map((p) => p.user_id);
+      const need = Math.max(0, MIN_PLAYERS - humans.length);
+      let bots = [];
+      if (need) {
+        // Fewer than 5 people: bots fill the table. Each candidate film goes
+        // with its clue words, so the database can play the bots fairly.
+        const picks = impostorOptions(18);
+        const briefs = await track(Promise.all(picks.map((o) => botBrief(o).then((b) => ({ ...o, ...b })).catch(() => null))));
+        const opts = briefs.filter((o) => o && o.words.length >= 3);
+        const names = BOT_NAMES.slice().sort(() => Math.random() - 0.5);
+        bots = Array.from({ length: need }, (_, i) => ({ id: `bot:${i + 1}`, name: `🤖 ${names[i % names.length]}` }));
+        const { error } = await sb.rpc('deal_impostor_bots', { rid: roomId, rnd: round, options: opts, bots: bots.map((b) => b.id) });
+        if (error) throw error;
+      } else {
+        const { error } = await sb.rpc('deal_impostor', { rid: roomId, rnd: round, options: options() });
+        if (error) throw error;
+      }
+      const players = [...humans, ...bots.map((b) => b.id)].sort(() => Math.random() - 0.5);
+      await patch({ phase: 'clues', round, clueRound: 1, players, bots, clueRounds: players.length });
     } catch (err) {
       console.warn(err);
-      toast(/3 players/.test(err.message || '') ? t('imp2.needThree') : t('errors.generic'), 'error');
+      const msg = String((err && err.message) || '');
+      toast(/deal_impostor_bots|function/.test(msg) ? t('imp2.needSql') : /players|people/.test(msg) ? t('imp2.needTwo') : t('errors.generic'), 'error');
       btn.disabled = false;
     }
   }
@@ -223,7 +288,7 @@ export function impostorRoom(roomId) {
       .map((p) => {
         const cells = [];
         for (let c = 1; c <= clueRoundsOf(s); c += 1) {
-          const m = movesOf('clue', s.round * 10 + c).find((x) => x.user_id === p);
+          const m = movesOf('clue', s.round * 10 + c).find((x) => actor(x) === p);
           const hidden = false; // clues show as soon as each player gives one
           cells.push(`<td>${m ? (hidden ? '✓' : esc(clean(m.data.word))) : c <= (s.clueRound || 0) || s.phase !== 'clues' ? '<span class="muted">…</span>' : ''}</td>`);
         }
@@ -247,12 +312,13 @@ export function impostorRoom(roomId) {
         <div class="row-end"><button class="btn btn-ghost" type="button" data-copy>${esc(t('wl.copyLink'))}</button></div></div>
         <h2 class="group-title">${esc(t('quiz.players', { n: people.length }))}</h2>
         <div class="board-list">${people.map((p) => `<div class="board-row${p.me ? ' is-me' : ''}"><span class="board-name">${esc(nameOf(p.user_id))}${online.has(p.user_id) ? ' <span class="dot-on">●</span>' : ''}</span></div>`).join('')}</div>
-        ${isHost() ? `<button class="btn" type="button" data-deal ${people.length < 3 ? 'disabled' : ''}>▶ ${esc(t('imp2.start'))}</button>${people.length < 3 ? `<p class="muted">${esc(t('imp2.needThree'))}</p>` : ''}` : `<p class="muted">${esc(t('quiz.waitHost'))}</p>`}
-        ${people.length < 3 ? botsOffer('/games/impostor') : ''}`;
+        ${people.length >= 2 && people.length < MIN_PLAYERS ? `<p class="muted">🤖 ${esc(t('imp2.botsFill', { n: MIN_PLAYERS - people.length }))}</p>` : ''}
+        ${isHost() ? `<button class="btn" type="button" data-deal ${people.length < 2 ? 'disabled' : ''}>▶ ${esc(t('imp2.start'))}</button>${people.length < 2 ? `<p class="muted">${esc(t('imp2.needTwo'))}</p>` : ''}` : `<p class="muted">${esc(t('quiz.waitHost'))}</p>`}
+        ${people.length < 2 ? botsOffer('/games/impostor') : ''}`;
     } else {
       html = cardHtml();
       if (s.phase === 'clues') {
-        const mine = movesOf('clue', s.round * 10 + s.clueRound).find((m) => m.user_id === uid);
+        const mine = movesOf('clue', s.round * 10 + s.clueRound).find((m) => m.user_id === uid && !m.data.bot);
         html += `<p class="imp-step">${esc(t('imp2.clueStep', { n: s.clueRound, of: clueRoundsOf(s) }))}</p>`;
         if (inRound && !mine)
           html += `<form class="imp-form"><input type="text" maxlength="24" autocomplete="off" placeholder="${esc(t('imp2.oneWord'))}" aria-label="${esc(t('imp2.oneWord'))}" value="${esc(draft)}" />
@@ -260,7 +326,7 @@ export function impostorRoom(roomId) {
         else if (inRound) html += `<p class="muted">${esc(t('imp2.waitOthers'))}</p>`;
         html += cluesHtml();
       } else if (s.phase === 'vote') {
-        const mine = movesOf('vote', s.round * 10).find((m) => m.user_id === uid);
+        const mine = movesOf('vote', s.round * 10).find((m) => m.user_id === uid && !m.data.bot);
         html += cluesHtml();
         html += `<p class="imp-step">${esc(t('imp2.voteStep'))}</p>`;
         if (inRound && !mine)
