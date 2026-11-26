@@ -151,7 +151,7 @@ export function impostorBots() {
   const body = el('<div class="imp-body"></div>');
   node.append(body);
   const { later, clearAll } = timers(node);
-  const bots = makeBots(3);
+  const bots = makeBots(4); // at least 5 players: you and four bots
   const players = [{ id: ME, name: t('wl.you') }, ...bots];
   const nameOf = (id) => players.find((p) => p.id === id).name;
   const record = new Map(players.map((p) => [p.id, 0]));

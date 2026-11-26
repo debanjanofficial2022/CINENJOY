@@ -281,7 +281,7 @@ const dict = {
     },
     bots: {
       practice: 'Practice with bots', chip: 'Practice with bots', inLobby: 'Nobody else here yet? Practise with bots while you wait.',
-      impLead: "You and three bots. One of the four is the impostor. Nothing is saved, so play as many rounds as you like.",
+      impLead: "You and four bots. One of the five is the impostor. Nothing is saved, so play as many rounds as you like.",
       prLead: 'You against two bots: name the poster before they do. Nothing is saved, so play as often as you like.',
       pxLead: 'You and two bots take turns to draw. Each bot sketches a still from its title; on your turn, you draw and the bots guess.',
       drawNote: "Bots can't see your drawing: the more you draw, the sooner they guess.", sketching: '{name} is sketching…',
@@ -650,7 +650,7 @@ const dict = {
     },
     bots: {
       practice: '和机器人练习', chip: '机器人练习', inLobby: '还没有别人加入？先和机器人练练手。',
-      impLead: '你和三个机器人，四人中有一个是卧底。不会保存记录，想玩多少轮都行。',
+      impLead: '你和四个机器人，五人中有一个是卧底。不会保存记录，想玩多少轮都行。',
       prLead: '你和两个机器人比赛，抢先说出海报上的片名。不会保存记录，随便玩。',
       pxLead: '你和两个机器人轮流画画。机器人会描一张剧照的轮廓；轮到你时，你来画，机器人来猜。',
       drawNote: '机器人看不到你的画：你画得越多，它们猜得越快。', sketching: '{name} 正在画…',
@@ -1019,7 +1019,7 @@ const dict = {
     },
     bots: {
       practice: 'Practicar con bots', chip: 'Práctica con bots', inLobby: '¿Aún no hay nadie más? Practica con bots mientras esperas.',
-      impLead: 'Tú y tres bots. Uno de los cuatro es el impostor. No se guarda nada, así que juega todas las rondas que quieras.',
+      impLead: 'Tú y cuatro bots. Uno de los cinco es el impostor. No se guarda nada, así que juega todas las rondas que quieras.',
       prLead: 'Tú contra dos bots: adivina el póster antes que ellos. No se guarda nada, juega cuanto quieras.',
       pxLead: 'Tú y dos bots dibujáis por turnos. Cada bot esboza un fotograma de su título; en tu turno, dibujas tú y los bots adivinan.',
       drawNote: 'Los bots no ven tu dibujo: cuanto más dibujes, antes adivinan.', sketching: '{name} está dibujando…',
