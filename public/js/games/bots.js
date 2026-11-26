@@ -82,9 +82,10 @@ function scoreList(players, scores) {
 const STOP = new Set(
   'the a an and or of in on at to for with from by into over after before about his her their its this that these those who what when where which while is are was were be been being has have had not but as it he she they them him you your our we us one two three new old based film movie series story life man woman'.split(' '),
 );
+const HONORIFIC = new Set(['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Sir', 'Captain', 'Detective', 'Inspector', 'Professor', 'Uncle', 'Aunt', 'Young', 'Old', 'Little']);
 // Everyday words that make poor clues
 const FILLER = new Set(
-  'about above across after again against along among another around become becomes before begin begins behind being below beneath beside between beyond bring brings career cause comes could daily decide decides despite discover discovers during early either every everything events except family finally finds first follows former friend friends front getting given gives going great group having heart himself herself however instead itself journey later least leave leaves little lives living local makes making might moment months never other others otherwise people perhaps place plans point power quickly rather really recounts returns right second seems sets several should since someone something soon start starts still story strange street takes taking their themselves there these thing things those though three through times together toward trying turns under unless until upon using village wants where wherein whether which while whole whose within without world would years young ordinary memorable unexpected'.split(' '),
+  'about above across after again against along among another around become becomes before begin begins behind being below beneath beside between beyond bring brings career cause comes could daily decide decides despite discover discovers during early either every everything events except family finally finds first follows former friend friends front getting given gives going great group having heart himself herself however instead itself journey later least leave leaves little lives living local makes making might moment months never other others otherwise people perhaps place plans point power quickly rather really recounts returns right second seems sets several should since someone something soon start starts still story strange street takes taking their themselves there these thing things those though three through times together toward trying turns under unless until upon using village wants where wherein whether which while whole whose within without world would years young ordinary memorable unexpected history relationship affair intelligence claims target based novel sequel remake biography woman lover lovers love friendship marriage relationships'.split(' '),
 );
 const facts = new Map();
 async function factsOf(item) {
@@ -119,10 +120,13 @@ async function factsOf(item) {
       // Characters' names ("Feluda", "Simran", "Raj"): strong but fair clues
       const castList = (d.credits && d.credits.cast) || [];
       for (const c of castList.slice(0, 5)) {
-        const ch = String(c.character || '').split(/[/(,]/)[0].trim();
+        const full = String(c.character || '');
+        // A nickname in brackets is what people know ("Prodosh Mitter (Feluda)")
+        const nick = (full.match(/\(([^)]+)\)/) || [])[1];
+        const ch = (nick || full.split(/[/(,]/)[0]).trim();
         if (!ch || /\b(himself|herself|self|narrator|voice)\b/i.test(ch)) continue;
-        const words = ch.split(/\s+/).filter((w) => /^[A-Z]/.test(w));
-        if (words.length) put(tier.chars, words.length > 1 && words[0].length <= 4 ? words[1] : words[0]);
+        const words = ch.split(/\s+/).filter((w) => /^[A-Z]/.test(w) && !HONORIFIC.has(w.replace(/\.$/, '')));
+        if (words.length) put(tier.chars, words[0]);
       }
       // Director and leading actors, by surname
       const makers =
